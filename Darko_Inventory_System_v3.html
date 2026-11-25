@@ -1,0 +1,3639 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="darko-ims.webmanifest" />
+    <link
+      id="appTouchIcon"
+      rel="apple-touch-icon"
+      href="apple-touch-icon-180.png"
+    />
+    <link
+      id="appFavicon"
+      rel="icon"
+      type="image/png"
+      href="darko-ims-icon-192.png"
+    />
+    <title>
+      Darko Pharmaceuticals & Medical Supplies - Sales & Inventory Management
+      System
+    </title>
+    <style>
+      :root {
+        --teal: #0f766e;
+        --teal-dark: #115e59;
+        --teal-light: #ccfbf1;
+        --bg: #f1f5f9;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+        --blue: #2563eb;
+        --border: #e2e8f0;
+        --shadow:
+          0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 14px rgba(15, 23, 42, 0.06);
+        --radius: 12px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .shell {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 238px;
+        flex-shrink: 0;
+        background: linear-gradient(180deg, var(--teal), var(--teal-dark));
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 14px 16px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        box-sizing: border-box;
+        box-shadow: var(--shadow);
+        overflow-y: auto;
+        transition:
+          width 0.22s ease,
+          padding 0.22s ease,
+          opacity 0.18s ease;
+      }
+      #appShell.nav-closed .sidebar {
+        width: 0;
+        min-width: 0;
+        flex-basis: 0;
+        padding-left: 0;
+        padding-right: 0;
+        opacity: 0;
+        overflow: hidden;
+      }
+      .app-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(241, 245, 249, 0.94);
+        padding: 8px 0 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.02rem;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 0 6px;
+      }
+      .brand .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--teal);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+      .brand small {
+        display: block;
+        font-size: 0.64rem;
+        font-weight: 400;
+        opacity: 0.85;
+      }
+      .sidebar nav.tabs {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 22px 0 12px;
+      }
+      .sidebar nav.tabs button {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        text-align: left;
+        padding: 11px 14px;
+        border-radius: 9px;
+        cursor: pointer;
+        font-size: 0.92rem;
+        font-weight: 600;
+        transition: 0.15s;
+        width: 100%;
+      }
+      .sidebar nav.tabs button:hover {
+        background: rgba(255, 255, 255, 0.22);
+      }
+      .sidebar nav.tabs button.active {
+        background: #fff;
+        color: var(--teal-dark);
+      }
+      .sidefoot {
+        margin-top: auto;
+      }
+      .userbadge {
+        background: rgba(255, 255, 255, 0.13);
+        border-radius: 9px;
+        padding: 9px 12px;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+        line-height: 1.35;
+      }
+      #clock {
+        font-size: 0.72rem;
+        opacity: 0.85;
+        padding: 0 6px 10px;
+      }
+      .content {
+        flex: 1;
+        min-width: 0;
+      }
+      main {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 22px 18px 60px;
+      }
+      #loginWrap {
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(rgba(8, 37, 39, 0.42), rgba(8, 37, 39, 0.58)),
+          center / cover no-repeat fixed;
+        z-index: 500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .login-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 34px 30px;
+        width: 370px;
+        max-width: 94vw;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+      }
+      .login-logo-mark {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 12px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: var(--teal);
+        color: #fff;
+        font-size: 2.3rem;
+        font-weight: 800;
+        box-shadow: 0 5px 16px rgba(15, 118, 110, 0.24);
+      }
+      .login-logo-mark img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #fff;
+      }
+      .print-only {
+        display: none;
+      }
+      @media (max-width: 860px) {
+        .shell {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: static;
+        }
+        #appShell.nav-closed .sidebar {
+          display: none;
+        }
+        .sidebar nav.tabs {
+          flex-direction: row;
+          flex-wrap: wrap;
+        }
+        .sidebar nav.tabs button {
+          width: auto;
+        }
+      }
+      @media print {
+        @page {
+          size: A4;
+          margin: 12mm;
+        }
+        @page receipt {
+          size: 80mm auto;
+          margin: 2mm;
+        }
+        .sidebar,
+        #toast,
+        #loginWrap,
+        .no-print {
+          display: none !important;
+        }
+        #appShell .content > main {
+          display: none !important;
+        }
+        #modalWrap {
+          position: static;
+          display: block !important;
+          background: #fff;
+          padding: 0;
+        }
+        #modalBox {
+          box-shadow: none;
+          border-radius: 0;
+          max-width: 100%;
+          max-height: none;
+          padding: 0;
+          overflow: visible !important;
+        }
+        #modalBox div[style*="max-height"] {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+        .print-only {
+          display: block;
+          text-align: center;
+          margin-bottom: 8px;
+        }
+        .print-brand {
+          display: flex !important;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          color: #111 !important;
+          text-align: center;
+          margin: 0 auto 14px;
+          padding: 0 0 10px;
+          border-bottom: 1px solid #777;
+          font-size: 11pt;
+          line-height: 1.3;
+          break-inside: avoid;
+        }
+        .print-brand img {
+          display: block;
+          width: 64px;
+          height: 64px;
+          object-fit: contain;
+          flex: 0 0 auto;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+        .print-brand-copy {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .print-brand-name {
+          font-size: 15pt;
+          font-weight: 750;
+        }
+        .print-brand-subtitle {
+          font-size: 9pt;
+          color: #333 !important;
+        }
+        body.print-a4 #globalPrintHeader {
+          display: flex !important;
+        }
+        body.print-a4 #appShell .content > main {
+          color: #111 !important;
+        }
+        body.print-a4 #appShell .content > main table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        body.print-a4 #appShell .content > main th,
+        body.print-a4 #appShell .content > main td {
+          color: #111 !important;
+          border-color: #777 !important;
+          padding: 5px 6px;
+          font-size: 9pt;
+          overflow-wrap: anywhere;
+        }
+        body.print-a4 #appShell .content > main .panel {
+          box-shadow: none;
+          border: 1px solid #bbb;
+          break-inside: avoid;
+        }
+        body.print-a4 #appShell .content > main [style*="overflow"] {
+          overflow: visible !important;
+          max-height: none !important;
+        }
+        body.print-receipt .print-brand {
+          margin-bottom: 8px;
+        }
+        body.print-receipt .print-brand img {
+          width: 58px;
+          height: 58px;
+        }
+        body.print-a4:not(.print-receipt) #modalWrap {
+          display: none !important;
+        }
+        body.print-a4 #appShell .content > main {
+          display: block !important;
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
+        body.print-a4 #appShell .content > main > .view {
+          display: none !important;
+        }
+        body.print-a4 #appShell .content > main > .view.active {
+          display: block !important;
+        }
+        body.print-receipt #modalWrap {
+          display: block !important;
+        }
+        body.print-receipt #appShell .content > main {
+          display: none !important;
+        }
+        body.print-pos #modalBox {
+          width: 80mm;
+          max-width: 80mm;
+          page: receipt;
+          padding: 0;
+        }
+        body.print-pos .receipt {
+          width: 76mm;
+          max-width: 76mm;
+          border: 0;
+          border-radius: 0;
+          padding: 0;
+          font-size: 10pt;
+          line-height: 1.35;
+          color: #111 !important;
+          overflow-wrap: anywhere;
+        }
+        body.print-pos .receipt .print-brand {
+          gap: 5px;
+          font-size: 8pt;
+          margin-bottom: 6px;
+          padding-bottom: 5px;
+        }
+        body.print-pos .receipt .print-brand img {
+          width: 38px;
+          height: 38px;
+        }
+        body.print-pos .receipt .print-brand-name {
+          font-size: 10pt;
+        }
+        body.print-pos .receipt .print-brand-subtitle {
+          font-size: 7pt;
+        }
+        body.print-pos #modalBox > .print-brand {
+          width: 76mm;
+          max-width: 76mm;
+          gap: 4px;
+          margin-bottom: 6px;
+        }
+        body.print-pos #modalBox > .print-brand img {
+          width: 30px;
+          height: 30px;
+        }
+        body.print-pos #modalBox > .print-brand .print-brand-name {
+          font-size: 8pt;
+        }
+        body.print-pos #modalBox > .print-brand .print-brand-subtitle {
+          font-size: 6pt;
+        }
+        body.print-pos .receipt table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        body.print-pos .receipt td {
+          color: #111 !important;
+          padding: 3px 0;
+          vertical-align: top;
+        }
+        body.print-pos #modalBox div[style*="max-height"] {
+          max-height: none !important;
+          overflow: visible !important;
+        }
+        body.print-pos #modalBox {
+          overflow: visible !important;
+        }
+        body.print-pos #modalBox > div:last-child {
+          display: none !important;
+        }
+        body.print-a4:not(.print-receipt) tr {
+          break-inside: avoid;
+        }
+        body {
+          background: #fff;
+        }
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+      h2 {
+        font-size: 1.3rem;
+        margin-bottom: 4px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin-bottom: 18px;
+      }
+      .grid-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px 18px;
+        border: 1px solid var(--border);
+      }
+      .card .k {
+        font-size: 0.75rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        font-weight: 700;
+      }
+      .card .v {
+        font-size: 1.55rem;
+        font-weight: 800;
+        margin-top: 6px;
+      }
+      .card .d {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .card.teal {
+        border-top: 4px solid var(--teal);
+      }
+      .card.green {
+        border-top: 4px solid var(--green);
+      }
+      .card.amber {
+        border-top: 4px solid var(--amber);
+      }
+      .card.red {
+        border-top: 4px solid var(--red);
+      }
+      .card.blue {
+        border-top: 4px solid var(--blue);
+      }
+      .panel {
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+        padding: 18px;
+        margin-bottom: 20px;
+      }
+      .panel h3 {
+        font-size: 1rem;
+        margin-bottom: 12px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      input,
+      select,
+      textarea {
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        font-size: 0.9rem;
+        background: #fff;
+        color: var(--ink);
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid var(--teal-light);
+        border-color: var(--teal);
+      }
+      .btn {
+        border: none;
+        border-radius: 9px;
+        padding: 9px 16px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.15s;
+        background: var(--teal);
+        color: #fff;
+      }
+      .btn:hover {
+        background: var(--teal-dark);
+      }
+      .btn.ghost {
+        background: #fff;
+        color: var(--teal-dark);
+        border: 1px solid var(--border);
+      }
+      .btn.danger {
+        background: var(--red);
+      }
+      .btn.warn {
+        background: var(--amber);
+      }
+      .btn.green {
+        background: var(--green);
+      }
+      .btn.sm {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+        border-radius: 7px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.86rem;
+      }
+      th {
+        background: #f8fafc;
+        text-align: left;
+        padding: 10px 10px;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--border);
+        white-space: nowrap;
+      }
+      td {
+        padding: 9px 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+      tr:hover td {
+        background: #f8fafc;
+      }
+      .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .badge {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .b-ok {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .b-low {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .b-out {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .b-exp {
+        background: #fde8e8;
+        color: #991b1b;
+      }
+      .b-cat {
+        background: #e0f2fe;
+        color: #075985;
+      }
+      .pos-wrap {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 18px;
+      }
+      @media (max-width: 900px) {
+        .pos-wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+      .prod-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+        gap: 10px;
+        max-height: 62vh;
+        overflow: auto;
+        padding: 4px;
+      }
+      .pcard {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 13px;
+        cursor: pointer;
+        transition: 0.12s;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      }
+      .pcard:hover {
+        border-color: var(--teal);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+      .pcard.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .pcard .pn {
+        font-weight: 600;
+        font-size: 0.85rem;
+        line-height: 1.25;
+      }
+      .pcard .pp {
+        color: var(--teal-dark);
+        font-weight: 800;
+        margin-top: 5px;
+      }
+      .pcard .ps {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .cart-list {
+        max-height: 38vh;
+        overflow: auto;
+      }
+      .cart-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--border);
+        font-size: 0.85rem;
+      }
+      .cart-row .nm {
+        flex: 1;
+        line-height: 1.25;
+      }
+      .qtybtn {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+        font-weight: 800;
+        color: var(--teal-dark);
+      }
+      .totline {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 0.9rem;
+      }
+      .totline.grand {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--teal-dark);
+        border-top: 2px solid var(--border);
+        margin-top: 6px;
+        padding-top: 10px;
+      }
+      .empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 26px;
+        font-size: 0.88rem;
+      }
+      .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        height: 150px;
+        padding: 8px 4px;
+      }
+      .bar-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+      }
+      .bar {
+        width: 100%;
+        max-width: 46px;
+        background: linear-gradient(180deg, var(--teal), #14b8a6);
+        border-radius: 6px 6px 0 0;
+        min-height: 3px;
+      }
+      .bar-col .bl {
+        font-size: 0.68rem;
+        color: var(--muted);
+      }
+      .bar-col .bv {
+        font-size: 0.68rem;
+        font-weight: 700;
+      }
+      #toast {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .toast {
+        background: var(--ink);
+        color: #fff;
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        box-shadow: var(--shadow);
+        animation: fadein 0.25s;
+      }
+      .toast.err {
+        background: var(--red);
+      }
+      .toast.ok {
+        background: var(--green);
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      #modalWrap {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #modalWrap.open {
+        display: flex;
+      }
+      #modalBox {
+        background: #fff;
+        border-radius: 14px;
+        max-width: 560px;
+        width: 100%;
+        max-height: 88vh;
+        overflow: auto;
+        padding: 22px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .form-grid .full {
+        grid-column: 1/-1;
+      }
+      label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+      }
+      .settings-note {
+        background: #f0fdfa;
+        border: 1px solid #99f6e4;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 0.83rem;
+        line-height: 1.55;
+        color: #134e4a;
+        margin-top: 10px;
+      }
+      .settings-note code {
+        background: #ccfbf1;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 0.78rem;
+      }
+      .receipt {
+        page: receipt;
+        font-family: "Courier New", monospace;
+        font-size: 0.85rem;
+        border: 1px dashed var(--border);
+        padding: 16px;
+        border-radius: 8px;
+      }
+      .receipt h4 {
+        text-align: center;
+        margin-bottom: 4px;
+        font-family: inherit;
+      }
+      .receipt table {
+        font-size: 0.8rem;
+      }
+      .print-brand.print-only {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loginWrap">
+      <div class="login-card">
+        <div id="loginLogo" class="login-logo-mark" aria-label="Company logo">
+          D
+        </div>
+        <h3 id="loginBrandName" style="text-align: center; margin: 6px 0 2px">
+          Darko Pharma IMS
+        </h3>
+        <p
+          style="
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-bottom: 18px;
+          "
+        >
+          Sales &amp; Inventory Management | Sign in
+        </p>
+        <label>Username</label
+        ><input
+          id="loginUser"
+          style="width: 100%; margin-bottom: 10px"
+          autocomplete="username"
+          onkeydown="if (event.key === 'Enter') attemptLogin();"
+        />
+        <label>Password</label
+        ><input
+          id="loginPass"
+          type="password"
+          style="width: 100%; margin-bottom: 6px"
+          autocomplete="current-password"
+          onkeydown="if (event.key === 'Enter') attemptLogin();"
+        />
+        <p
+          id="loginErr"
+          style="
+            color: var(--red);
+            font-size: 0.8rem;
+            min-height: 1.2em;
+            margin: 2px 0 8px;
+          "
+        ></p>
+        <button class="btn" style="width: 100%" onclick="attemptLogin()">
+          Sign In
+        </button>
+      </div>
+    </div>
+    <div class="shell" id="appShell">
+      <aside class="sidebar" id="appSidebar">
+        <div class="brand">
+          <div class="logo">D</div>
+          <div>
+            <span id="appBrandName">Darko Pharma IMS</span
+            ><small>Pharmaceuticals &amp; Medical Supplies</small>
+          </div>
+        </div>
+        <nav class="tabs">
+          <button data-v="dash" class="active">Dashboard</button>
+          <button data-v="pos">New Sale (POS)</button>
+          <button data-v="inv">Inventory</button>
+          <button data-v="sales">Sales History</button>
+          <button data-v="ledger">Ledgers</button>
+          <button data-v="finance">Financial Reports</button>
+          <button data-v="aging">Aged Receivables</button>
+          <button data-v="alerts">Alerts</button>
+          <button data-v="settings" data-admin-only>Settings</button>
+        </nav>
+        <div class="sidefoot">
+          <div class="userbadge" id="userBadge"></div>
+          <div id="clock"></div>
+          <button class="btn ghost" style="width: 100%" onclick="logout()">
+            Logout
+          </button>
+        </div>
+      </aside>
+      <div class="content">
+        <main>
+          <div id="globalPrintHeader" class="print-brand print-only"></div>
+          <div class="app-toolbar no-print">
+            <button
+              id="navToggle"
+              class="btn ghost"
+              type="button"
+              aria-controls="appSidebar"
+              aria-expanded="true"
+              onclick="toggleSidebar()"
+            >
+              Hide navigation
+            </button>
+          </div>
+          <section id="view-dash" class="view active"></section>
+          <section id="view-pos" class="view"></section>
+          <section id="view-inv" class="view"></section>
+          <section id="view-sales" class="view"></section>
+          <section id="view-ledger" class="view"></section>
+          <section id="view-finance" class="view"></section>
+          <section id="view-aging" class="view"></section>
+          <section id="view-alerts" class="view"></section>
+          <section id="view-settings" class="view"></section>
+        </main>
+      </div>
+    </div>
+    <div id="modalWrap"><div id="modalBox"></div></div>
+    <div id="toast"></div>
+    <script>
+      /* ============ Darko Pharma IMS  -  real-time engine ============ */
+      const BC =
+        "BroadcastChannel" in window
+          ? new BroadcastChannel("darko-ims-sync")
+          : null;
+      const K_PROD = "darko_products_v1",
+        K_SALES = "darko_sales_v1",
+        K_SET = "darko_settings_v1",
+        K_PARTY = "darko_parties_v1",
+        K_LEDGER = "darko_ledger_v1",
+        K_USERS = "darko_users_v1";
+      const DB_NAME = "DarkoPharmaIMS",
+        DB_VERSION = 1,
+        DB_TABLES = [
+          "products",
+          "sales",
+          "parties",
+          "ledger",
+          "settings",
+          "users",
+        ];
+      let imsDB = null,
+        databaseReady = false;
+      const DEFAULT_MED_BACKGROUND =
+        "data:image/svg+xml;charset=utf-8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="720" height="720" viewBox="0 0 720 720"><rect width="720" height="720" fill="#eef8f5"/><g fill="none" stroke="#0f766e" stroke-opacity=".075" stroke-width="8"><path d="M110 70a38 38 0 0 1 54 0l28 28a38 38 0 0 1-54 54l-28-28a38 38 0 0 1 0-54Zm28 28 54 54"/><path d="M500 360h100m-50-50v100"/><path d="M110 500a38 38 0 0 1 54 0l28 28a38 38 0 0 1-54 54l-28-28a38 38 0 0 1 0-54Zm28 28 54 54"/><circle cx="510" cy="140" r="44"/><path d="M510 116v48m-24-24h48"/><path d="M340 550a32 32 0 0 1 45-45l30 30a32 32 0 0 1-45 45l-30-30Zm22-22 45 45"/></g></svg>',
+        );
+      const DEFAULT_LOGIN_BACKGROUND =
+        "data:image/svg+xml;charset=utf-8," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000"><defs><linearGradient id="b" x2="0" y2="1"><stop stop-color="#d9f3e8"/><stop offset="1" stop-color="#78b7a8"/></linearGradient><linearGradient id="g" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e6f4ef"/></linearGradient></defs><rect width="1600" height="1000" fill="url(#b)"/><path d="M0 730h1600v270H0z" fill="#315f5b" opacity=".23"/><g opacity=".62"><rect x="100" y="150" width="1400" height="470" rx="30" fill="#f7fffb"/><path d="M130 185h1340M130 340h1340M130 495h1340" stroke="#76a99b" stroke-width="12"/><g fill="url(#g)" stroke="#8ab9aa" stroke-width="5"><rect x="205" y="218" width="120" height="105" rx="18"/><rect x="385" y="205" width="100" height="120" rx="20"/><rect x="560" y="225" width="145" height="95" rx="16"/><rect x="790" y="202" width="112" height="122" rx="22"/><rect x="1015" y="218" width="135" height="105" rx="18"/><rect x="1250" y="198" width="104" height="126" rx="18"/><rect x="260" y="370" width="145" height="100" rx="18"/><rect x="505" y="355" width="108" height="120" rx="22"/><rect x="730" y="372" width="140" height="98" rx="18"/><rect x="970" y="355" width="116" height="120" rx="22"/><rect x="1190" y="372" width="148" height="98" rx="18"/></g><g fill="#0f766e" opacity=".72"><path d="M255 258h48v28h-48zM410 247h50v25h-50zM605 259h55v25h-55zM820 248h52v25h-52zM1055 258h55v25h-55zM1275 246h52v25h-52zM300 405h62v26h-62zM533 403h52v26h-52zM770 407h62v26h-62zM1002 403h52v26h-52zM1235 407h62v26h-62z"/></g></g><g transform="translate(690 650) rotate(-24)"><rect x="-145" y="-48" width="290" height="96" rx="48" fill="#fff" opacity=".85"/><path d="M0-48h97a48 48 0 0 1 0 96H0z" fill="#0f766e" opacity=".78"/><path d="M0-48v96" stroke="#fff" stroke-width="7" opacity=".8"/></g><g fill="#fff" opacity=".35"><circle cx="140" cy="810" r="90"/><circle cx="1450" cy="760" r="130"/><circle cx="1330" cy="120" r="52"/></g></svg>',
+        );
+
+      /* SEED  -  all 86 products extracted from Darko_Goods_List__11_Nov_2026.pdf
+   (Abeer W2013596: 35 items  |  Abeer W2013614: 13 items  |  Tulay 10-Nov-2026: 25 items  |  Tulay 11-Nov-2026: 13 items).
+   Quantities & USD rates are exactly as invoiced. Expiry dates were NOT in the source PDF  -  sample
+   dates are pre-filled as editable placeholders. */
+      const SEED = [
+        [
+          "Napo Fefo Up Tablet (100x10)",
+          "Supplements & Vitamins",
+          "Box",
+          3,
+          6.0,
+        ],
+        ["Cefine 200mg Tablet", "Antibiotics", "Pack", 10, 0.85],
+        ["Killmal 20/120 Tablets", "Antimalarial", "Box", 3, 2.2],
+        ["Napo Vit E Softgel Cap", "Supplements & Vitamins", "Pack", 3, 1.7],
+        ["Napo Malkill 80/480 Tablets", "Antimalarial", "Box", 3, 4.15],
+        ["Napomox Amoxy 500mg Caps", "Antibiotics", "Box", 30, 2.59],
+        ["Killmal 80/480 Tablets", "Antimalarial", "Box", 3, 4.35],
+        ["Napomol 500mg Tablets", "Analgesic & Pain", "Box", 2, 6.0],
+        ["Nopan 500mg Tablets", "Analgesic & Pain", "Box", 4, 6.0],
+        ["Nopan Suspension 100ml", "Analgesic & Pain", "Pcs", 40, 0.45],
+        ["Napofen 400mg Tablets", "Analgesic & Pain", "Box", 5, 1.35],
+        ["Napors (ORS)", "Gastro & Rehydration", "Box", 3, 6.9],
+        ["Napo Zinc Dispersible Tab", "Supplements & Vitamins", "Box", 3, 5.0],
+        ["Napocetrin 10mg Tablets", "Allergy & Cough", "Box", 3, 3.5],
+        ["Gastroloc Caps 20mg", "Gastro & Rehydration", "Pack", 30, 0.21],
+        ["Napotil 2mg Capsules", "Gastro & Rehydration", "Pack", 50, 0.12],
+        ["Napocee 500mg New Tablet", "Antibiotics", "Box", 3, 2.35],
+        [
+          "Napo Fefo Up Tablet Jar Pack",
+          "Supplements & Vitamins",
+          "Jar",
+          2,
+          5.0,
+        ],
+        ["Clonem Cream 20gm", "Dermatology & Creams", "Pcs", 30, 0.28],
+        ["Napo H Cort Cream 30g", "Dermatology & Creams", "Pcs", 30, 0.8],
+        ["Napocloxa Cloxacillin 500mg Cap", "Antibiotics", "Box", 5, 4.4],
+        ["Napoclox Ampiclox Capsule 500mg", "Antibiotics", "Box", 5, 3.9],
+        ["Napoventol 100 Micrograms", "Respiratory", "Pcs", 5, 1.39],
+        ["Absorbent Cotton Wool BP 500g", "Medical Supplies", "Pcs", 2, 3.3],
+        ["Gauze Swab 10x10 Sterile", "Medical Supplies", "Box", 2, 4.0],
+        [
+          "Elastic Crepe Bandage 10cm x 4m",
+          "Medical Supplies",
+          "Pcs",
+          12,
+          0.56,
+        ],
+        ["AD Tape USP 5cm (1x15)", "Medical Supplies", "Pcs", 15, 0.87],
+        ["Latex Examination Glove", "Medical Supplies", "Box", 3, 6.0],
+        ["Syringes & Needles 05ml FAR", "Medical Supplies", "Box", 2, 3.0],
+        ["Syringes & Needles 10ml (FAR)", "Medical Supplies", "Box", 2, 4.5],
+        ["Napo Erythromycin Tablet", "Antibiotics", "Box", 4, 7.7],
+        ["Napomycin Erythromycin Suspension", "Antibiotics", "Pcs", 20, 0.7],
+        ["Napo Girl (Sanitary Pads)", "Personal Care", "Pack", 48, 0.52],
+        [
+          "Night Rider Dotted Lubricated Condoms",
+          "Personal Care",
+          "Box",
+          6,
+          3.3,
+        ],
+        ["Napo Cotri 480 Tablets (100x10)", "Antimalarial", "Box", 1, 13.0],
+        [
+          "Gas Out Forte Plus Suspension",
+          "Gastro & Rehydration",
+          "Pcs",
+          10,
+          1.4,
+        ],
+        ["Gas Out Suspension (1x5)", "Gastro & Rehydration", "Pcs", 10, 1.15],
+        ["Cremag Laxative Suspension", "Gastro & Rehydration", "Pcs", 10, 0.7],
+        ["Napofen 400 Tablets (100x10T)", "Analgesic & Pain", "Box", 1, 11.7],
+        ["O Stop Diclofenac 50mg Tab", "Analgesic & Pain", "Box", 3, 2.8],
+        ["Napomet 250mg Metro Tab", "Antibiotics", "Box", 10, 0.76],
+        ["Napomet 500mg Metro Tab", "Antibiotics", "Box", 10, 1.31],
+        [
+          "Napo B2 Tablet Blister (100x10T)",
+          "Supplements & Vitamins",
+          "Box",
+          3,
+          5.5,
+        ],
+        ["Napo B2 Tablets Jar", "Supplements & Vitamins", "Pcs", 3, 3.0],
+        ["Napofoli Tablets Jar", "Supplements & Vitamins", "Pcs", 2, 3.0],
+        [
+          "Napo Foli Tablets Blister (100x10T)",
+          "Supplements & Vitamins",
+          "Box",
+          2,
+          4.5,
+        ],
+        ["Ciplok Tablets 500mg", "Antibiotics", "Box", 2, 3.4],
+        ["Napo CPM Tablet Blister Pack", "Allergy & Cough", "Box", 2, 4.0],
+        ["PCM Injection", "Analgesic & Pain", "bottle", 12, 1.2],
+        ["Blumeron 100 mg Tablets", "Antimalarial", "box", 4, 3.1],
+        ["Ponak Diclofenac 50 mg Tablets", "Analgesic & Pain", "box", 4, 1.5],
+        ["Azino 200 mg/5 ml Syrup", "Antibiotics", "bottle", 10, 0.82],
+        ["Ronadrex Tablets", "Respiratory", "box", 10, 2.5],
+        ["Ronak Mico Cream", "Dermatology & Creams", "box", 1, 9.12],
+        ["Piconfort Gel", "Dermatology & Creams", "box", 1, 9.12],
+        ["Runcit Fort Gel", "Dermatology & Creams", "box", 1, 9.12],
+        ["Runuderm Cream", "Dermatology & Creams", "box", 1, 4.56],
+        ["Dermisna Cream", "Dermatology & Creams", "box", 1, 4.56],
+        ["Derminink Cream", "Dermatology & Creams", "box", 1, 4.56],
+        ["Bulun Cure Cream", "Dermatology & Creams", "box", 1, 9.48],
+        ["Happy Stomach Tablets", "Gastro & Rehydration", "roll", 1, 11.0],
+        ["Mebendazole 100 mg Tablets", "Anthelmintic", "box", 2, 5.0],
+        ["Gentamicin Injection", "Antibiotics", "box", 3, 4.5],
+        ["Runcit Cold", "Allergy & Cough", "box", 3, 3.9],
+        ["Ronudex Injection", "Other", "box", 3, 4.5],
+        ["Ronpence", "Allergy & Cough", "box", 3, 4.5],
+        ["Mebendazole 500 mg", "Anthelmintic", "box", 12, 2.05],
+        ["R/L 500 ml (25 bottles)", "Gastro & Rehydration", "box", 2, 15.5],
+        ["Ranitidine Tablets", "Gastro & Rehydration", "box", 2, 3.0],
+        ["Chloramphenicol 250 mg", "Antibiotics", "box", 5, 3.6],
+        ["Ronak Ronpet Forte", "Other", "box", 2, 5.0],
+        ["ORS", "Gastro & Rehydration", "box", 2, 15.0],
+        ["Wormron 400 MF Tablet", "Anthelmintic", "box", 2, 2.0],
+        ["Amoxicillin 250 mg", "Antibiotics", "box", 10, 2.0],
+        ["Paracetamol Forte", "Analgesic & Pain", "box", 10, 2.5],
+        ["Eye Drops", "Other", "box", 10, 2.0],
+        ["Metronidazole Forte 400 mg", "Antibiotics", "box", 5, 2.5],
+        ["Artemether Injection", "Antimalarial", "box", 3, 5.0],
+        ["Ceftriaxone Injection", "Antibiotics", "roll", 2, 6.0],
+        ["Fini Pain", "Analgesic & Pain", "box", 1, 9.0],
+        ["Pain Relief", "Analgesic & Pain", "box", 2, 9.0],
+        ["Diclo 100", "Analgesic & Pain", "box", 10, 1.5],
+        ["Lomazole", "Other", "box", 3, 3.0],
+        ["Azithromycin", "Antibiotics", "box", 3, 6.5],
+        ["Dig... Syrup", "Other", "roll", 1, 16.0],
+        ["Mefenamic Forte 50", "Analgesic & Pain", "box", 5, 2.0],
+      ];
+      const SEED_EXPIRY = "2027-06-30"; // placeholder  -  editable per product (not present in the source PDF)
+
+      /* LEDGER SEED  -  customers & suppliers. Supplier opening balances equal the two
+   Abeer invoices ($528.48 + $128.60 = $657.08) and two Tulay invoices
+   ($296.12 + $201.00 = $497.12) from the source PDF, treated as unpaid. */
+      const SEED_PARTIES = [
+        {
+          id: 1,
+          type: "customer",
+          name: "City Clinic",
+          phone: "",
+          openingBalance: 0,
+        },
+        {
+          id: 2,
+          type: "customer",
+          name: "Hope Medical Centre",
+          phone: "",
+          openingBalance: 45.0,
+        },
+        {
+          id: 3,
+          type: "supplier",
+          name: "Abeer Pharmaceuticals",
+          phone: "",
+          openingBalance: 657.08,
+        },
+        {
+          id: 4,
+          type: "supplier",
+          name: "Tulay Pharmacy",
+          phone: "",
+          openingBalance: 497.12,
+        },
+      ];
+      const SEED_LEDGER = [
+        {
+          id: 1,
+          date: "2026-11-18",
+          partyId: 1,
+          dr: 62.4,
+          cr: 0,
+          note: "Credit sale  -  assorted medicines",
+        },
+        {
+          id: 2,
+          date: "2026-11-21",
+          partyId: 1,
+          dr: 0,
+          cr: 30.0,
+          note: "Payment received (cash)",
+        },
+        {
+          id: 3,
+          date: "2026-11-22",
+          partyId: 2,
+          dr: 28.5,
+          cr: 0,
+          note: "Credit sale  -  Napomox Amoxy 500mg x10 Box",
+        },
+        {
+          id: 4,
+          date: "2026-11-23",
+          partyId: 3,
+          dr: 0,
+          cr: 120.0,
+          note: "Purchase on credit  -  Amoxicillin 250mg x50 Box",
+        },
+        {
+          id: 5,
+          date: "2026-11-24",
+          partyId: 3,
+          dr: 70.0,
+          cr: 0,
+          note: "Payment made to supplier (cash)",
+        },
+      ];
+
+      /* ---------- Users & roles (client-side convenience lock) ----------
+   Current password hashes use PBKDF2; legacy hashes upgrade at next login.
+   Client-side roles do not secure records from users with browser/device access. */
+      function pwHash(s) {
+        let h = 0x811c9dc5;
+        for (let i = 0; i < s.length; i++) {
+          h ^= s.charCodeAt(i);
+          h = Math.imul(h, 0x01000193) >>> 0;
+        }
+        return (
+          ("00000000" + h.toString(16)).slice(-8) +
+          ("00000000" + (Math.imul(h, 0x85ebca6b) >>> 0).toString(16)).slice(-8)
+        );
+      }
+      const PASSWORD_ITERATIONS = 210000,
+        SESSION_TIMEOUT_MS = 30 * 60 * 1000,
+        AUTH_THROTTLE_KEY = "darko_login_throttle_v1";
+      function bytesToBase64(bytes) {
+        return btoa(String.fromCharCode(...new Uint8Array(bytes)));
+      }
+      function base64ToBytes(value) {
+        return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+      }
+      async function hashPassword(password, saltBytes) {
+        if (!crypto?.subtle)
+          throw new Error(
+            "Secure password hashing requires opening the app on localhost or HTTPS.",
+          );
+        const salt = saltBytes || crypto.getRandomValues(new Uint8Array(16));
+        const material = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(password),
+          "PBKDF2",
+          false,
+          ["deriveBits"],
+        );
+        const bits = await crypto.subtle.deriveBits(
+          {
+            name: "PBKDF2",
+            salt,
+            iterations: PASSWORD_ITERATIONS,
+            hash: "SHA-256",
+          },
+          material,
+          256,
+        );
+        return `pbkdf2$${PASSWORD_ITERATIONS}$${bytesToBase64(salt)}$${bytesToBase64(bits)}`;
+      }
+      async function verifyPassword(password, stored) {
+        if (!stored.startsWith("pbkdf2$"))
+          return { ok: stored === pwHash(password), needsUpgrade: true };
+        const [, iterations, salt, expected] = stored.split("$");
+        const actual = await hashPassword(password, base64ToBytes(salt));
+        return { ok: actual.split("$")[3] === expected, needsUpgrade: false };
+      }
+      function loginThrottle() {
+        try {
+          return (
+            JSON.parse(localStorage.getItem(AUTH_THROTTLE_KEY)) || {
+              count: 0,
+              until: 0,
+            }
+          );
+        } catch {
+          return { count: 0, until: 0 };
+        }
+      }
+      function noteFailedLogin() {
+        const now = Date.now(),
+          state = loginThrottle();
+        if (state.until && now >= state.until) {
+          state.count = 0;
+          state.until = 0;
+        }
+        state.count++;
+        if (state.count >= 5) {
+          state.until = now + 30000;
+          state.count = 0;
+        }
+        localStorage.setItem(AUTH_THROTTLE_KEY, JSON.stringify(state));
+      }
+      function clearFailedLogins() {
+        localStorage.removeItem(AUTH_THROTTLE_KEY);
+      }
+      function markSessionActivity() {
+        if (currentUser)
+          sessionStorage.setItem("darko_last_activity", String(Date.now()));
+      }
+      function expireSessionIfIdle() {
+        const last = Number(sessionStorage.getItem("darko_last_activity") || 0);
+        if (currentUser && last && Date.now() - last > SESSION_TIMEOUT_MS)
+          logout();
+      }
+      const SEED_USERS = [
+        {
+          u: "admin",
+          p: pwHash("admin123"),
+          role: "admin",
+          name: "Administrator",
+        },
+        {
+          u: "cashier",
+          p: pwHash("cashier123"),
+          role: "cashier",
+          name: "Cashier",
+        },
+      ];
+      function loadUsers() {
+        try {
+          const u = JSON.parse(localStorage.getItem(K_USERS));
+          return u && u.length ? u : SEED_USERS;
+        } catch (e) {
+          return SEED_USERS;
+        }
+      }
+      function saveUsers(list) {
+        localStorage.setItem(K_USERS, JSON.stringify(list));
+        if (databaseReady) writeDatabase();
+      }
+      function isAdmin() {
+        return currentRole === "admin";
+      }
+      function requireAdmin() {
+        if (!isAdmin()) {
+          toast(" Admin permission required", true);
+          return false;
+        }
+        return true;
+      }
+      async function attemptLogin() {
+        const u = $("#loginUser").value.trim(),
+          p = $("#loginPass").value;
+        const throttle = loginThrottle();
+        if (throttle.until > Date.now()) {
+          $("#loginErr").textContent =
+            "Too many attempts. Try again in " +
+            Math.ceil((throttle.until - Date.now()) / 1000) +
+            " seconds.";
+          return;
+        }
+        const found = loadUsers().find(
+          (x) => x.u.toLowerCase() === u.toLowerCase(),
+        );
+        let verified;
+        try {
+          verified = found ? await verifyPassword(p, found.p) : { ok: false };
+        } catch (error) {
+          $("#loginErr").textContent = error.message;
+          return;
+        }
+        if (!found || !verified.ok) {
+          noteFailedLogin();
+          $("#loginErr").textContent = "Invalid username or password";
+          return;
+        }
+        clearFailedLogins();
+        if (verified.needsUpgrade) {
+          if (
+            (found.u.toLowerCase() === "admin" && p === "admin123") ||
+            (found.u.toLowerCase() === "cashier" && p === "cashier123")
+          ) {
+            const next = prompt(
+              "This is a default demo password. Set a new password with at least 12 characters to continue:",
+            );
+            if (!next || next.length < 12) {
+              $("#loginErr").textContent =
+                "A new password of at least 12 characters is required.";
+              return;
+            }
+            found.p = await hashPassword(next);
+          } else found.p = await hashPassword(p);
+          saveUsers(loadUsers().map((x) => (x.u === found.u ? found : x)));
+        }
+        currentRole = found.role;
+        currentUser = found.u;
+        markSessionActivity();
+        sessionStorage.setItem("darko_session", JSON.stringify({ u: found.u }));
+        $("#loginWrap").style.display = "none";
+        applyRole();
+        applyBranding();
+        renderAll();
+        toast("Welcome, " + found.name + " ");
+      }
+      function logout() {
+        sessionStorage.removeItem("darko_session");
+        sessionStorage.removeItem("darko_last_activity");
+        currentRole = null;
+        currentUser = null;
+        $("#loginWrap").style.display = "flex";
+        $("#loginUser").value = "";
+        $("#loginPass").value = "";
+        $("#loginErr").textContent = "";
+      }
+      function applyRole() {
+        document
+          .querySelectorAll("[data-admin-only]")
+          .forEach((el) => (el.style.display = isAdmin() ? "" : "none"));
+        const b = $("#userBadge");
+        if (b)
+          b.innerHTML =
+            "<b>" +
+            esc(currentUser || "") +
+            '</b><br><small style="opacity:.85">Role: ' +
+            (currentRole === "admin"
+              ? "Administrator - full access"
+              : "Cashier - sales & stock only") +
+            "</small>";
+      }
+
+      let products = [],
+        sales = [],
+        settings = {
+          currency: "USD",
+          lrdRate: 190,
+          lowStock: 5,
+          expiryDays: 90,
+          logo: "",
+          background: "",
+          loginLogo: "",
+          loginBackground: "",
+          businessName: "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES",
+          appName: "Darko Pharma IMS",
+        },
+        cart = [],
+        posFilter = "",
+        posCat = "",
+        parties = [],
+        ledger = [],
+        currentRole = null,
+        currentUser = null;
+      const $ = (s) => document.querySelector(s),
+        $$ = (s) => document.querySelectorAll(s);
+      const toCents = (n) => Math.round((Number(n) + Number.EPSILON) * 100);
+      const fromCents = (n) => Number(n || 0) / 100;
+      const sumMoney = (values) =>
+        fromCents(values.reduce((sum, n) => sum + toCents(n), 0));
+      const money = (n) =>
+        settings.currency + " " + fromCents(toCents(n)).toFixed(2);
+      const moneyFor = (n, c) =>
+        c === "LRD"
+          ? "LRD " +
+            fromCents(
+              Math.round(toCents(n) * Number(settings.lrdRate || 190)),
+            ).toFixed(2)
+          : "USD " + fromCents(toCents(n)).toFixed(2);
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+
+      function load() {
+        let needSave = false;
+        try {
+          products = JSON.parse(localStorage.getItem(K_PROD));
+          if (!Array.isArray(products)) products = null;
+        } catch (e) {
+          products = null;
+        }
+        if (products === null) {
+          needSave = true;
+          products = SEED.map((r, i) => ({
+            id: i + 1,
+            sku: "DK-" + String(i + 1).padStart(3, "0"),
+            name: r[0],
+            cat: r[1],
+            unit: r[2],
+            qty: r[3],
+            price: r[4],
+            expiry: SEED_EXPIRY,
+          }));
+        }
+        try {
+          sales = JSON.parse(localStorage.getItem(K_SALES)) || [];
+        } catch (e) {
+          sales = [];
+        }
+        const rawP = localStorage.getItem(K_PARTY);
+        try {
+          parties = rawP !== null ? JSON.parse(rawP) : null;
+        } catch (e) {
+          parties = null;
+        }
+        const rawL = localStorage.getItem(K_LEDGER);
+        try {
+          ledger = rawL !== null ? JSON.parse(rawL) : null;
+        } catch (e) {
+          ledger = null;
+        }
+        /* seed demo ledger accounts ONLY when never saved before (rawP===null);
+     an empty array a user cleared must NOT be re-seeded */
+        if (rawP === null) {
+          parties = SEED_PARTIES.map((p) => ({ ...p }));
+          ledger = SEED_LEDGER.map((e) => ({ ...e }));
+          needSave = true;
+        } else {
+          if (!parties) parties = [];
+          if (!ledger) ledger = [];
+        }
+        try {
+          Object.assign(
+            settings,
+            JSON.parse(localStorage.getItem(K_SET)) || {},
+          );
+        } catch (e) {}
+        if (needSave) persist(false);
+      }
+      function persist(broadcast = true) {
+        localStorage.setItem(K_PROD, JSON.stringify(products));
+        localStorage.setItem(K_SALES, JSON.stringify(sales));
+        localStorage.setItem(K_SET, JSON.stringify(settings));
+        localStorage.setItem(K_PARTY, JSON.stringify(parties));
+        localStorage.setItem(K_LEDGER, JSON.stringify(ledger));
+        if (databaseReady) writeDatabase();
+        if (broadcast && BC) BC.postMessage({ t: "sync" });
+      }
+      function openDatabase() {
+        return new Promise((resolve, reject) => {
+          if (!window.indexedDB)
+            return reject(
+              new Error("IndexedDB is unavailable in this browser."),
+            );
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            for (const table of DB_TABLES) {
+              if (!db.objectStoreNames.contains(table))
+                db.createObjectStore(table, {
+                  keyPath:
+                    table === "settings"
+                      ? "key"
+                      : table === "users"
+                        ? "u"
+                        : table === "sales"
+                          ? "no"
+                          : "id",
+                });
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () =>
+            reject(request.error || new Error("Could not open database."));
+          request.onblocked = () =>
+            reject(
+              new Error("Database upgrade is blocked by another open app tab."),
+            );
+        });
+      }
+      function writeDatabase() {
+        if (!imsDB) return;
+        try {
+          const tx = imsDB.transaction(DB_TABLES, "readwrite");
+          for (const table of DB_TABLES) tx.objectStore(table).clear();
+          for (const item of products) tx.objectStore("products").put(item);
+          for (const item of sales) tx.objectStore("sales").put(item);
+          for (const item of parties) tx.objectStore("parties").put(item);
+          for (const item of ledger) tx.objectStore("ledger").put(item);
+          tx.objectStore("settings").put({ key: "config", ...settings });
+          for (const item of loadUsers()) tx.objectStore("users").put(item);
+          tx.onerror = () =>
+            console.error("Darko IMS database write failed", tx.error);
+        } catch (error) {
+          console.error("Darko IMS database write failed", error);
+        }
+      }
+      function readDatabase() {
+        return new Promise((resolve, reject) => {
+          const tx = imsDB.transaction(DB_TABLES, "readonly"),
+            result = {};
+          for (const table of DB_TABLES) {
+            const request = tx.objectStore(table).getAll();
+            request.onsuccess = () => {
+              result[table] = request.result;
+            };
+            request.onerror = () => reject(request.error);
+          }
+          tx.oncomplete = () => resolve(result);
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+      async function initializeDatabase() {
+        try {
+          imsDB = await openDatabase();
+          imsDB.onversionchange = () => {
+            imsDB.close();
+            imsDB = null;
+            databaseReady = false;
+          };
+          const data = await readDatabase();
+          const populated = DB_TABLES.some((table) => data[table]?.length);
+          if (populated) {
+            // Preserve records from browser storage when an older database
+            // contains only a subset of the stores.
+            const stored = (key) => {
+              try {
+                return JSON.parse(localStorage.getItem(key) || "null");
+              } catch {
+                return null;
+              }
+            };
+            const localProducts = stored(K_PROD);
+            const localSales = stored(K_SALES);
+            const localParties = stored(K_PARTY);
+            const localLedger = stored(K_LEDGER);
+            const localSettings = stored(K_SET);
+            const localUsers = stored(K_USERS);
+            if (!data.products?.length && localProducts?.length)
+              data.products = localProducts;
+            if (!data.sales?.length && localSales?.length)
+              data.sales = localSales;
+            if (!data.parties?.length && localParties?.length)
+              data.parties = localParties;
+            if (!data.ledger?.length && localLedger?.length)
+              data.ledger = localLedger;
+            if (!data.settings?.length && localSettings)
+              data.settings = [{ key: "config", ...localSettings }];
+            if (!data.users?.length && localUsers?.length)
+              data.users = localUsers;
+            localStorage.setItem(K_PROD, JSON.stringify(data.products));
+            localStorage.setItem(K_SALES, JSON.stringify(data.sales));
+            localStorage.setItem(K_PARTY, JSON.stringify(data.parties));
+            localStorage.setItem(K_LEDGER, JSON.stringify(data.ledger));
+            localStorage.setItem(
+              K_SET,
+              JSON.stringify(
+                data.settings.find((x) => x.key === "config") || {},
+              ),
+            );
+            localStorage.setItem(K_USERS, JSON.stringify(data.users));
+            load();
+          }
+          databaseReady = true;
+          writeDatabase();
+          applyBranding();
+          renderAll();
+          const badge = document.getElementById("databaseStatus");
+          if (badge)
+            badge.textContent =
+              "IndexedDB connected · local persistent database";
+        } catch (error) {
+          console.error("Darko IMS database unavailable", error);
+          const badge = document.getElementById("databaseStatus");
+          if (badge)
+            badge.textContent =
+              "Database unavailable · browser storage fallback active";
+        }
+      }
+      function printBrandMarkup(label) {
+        const businessName =
+          settings.businessName || "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES";
+        const image = settings.logo || "darko-ims-icon-192.png";
+        return `<div class="print-brand print-only"><img src="${esc(image)}" alt="Company logo"><div class="print-brand-copy"><strong class="print-brand-name">${esc(businessName)}</strong><span class="print-brand-subtitle">${esc(label)} · ${esc(settings.appName || "Darko Pharma IMS")}</span></div></div>`;
+      }
+      function applyBranding() {
+        const logo = document.querySelector(".brand .logo"),
+          name = settings.appName || "Darko Pharma IMS";
+        if (logo)
+          logo.innerHTML = settings.logo
+            ? `<img src="${esc(settings.logo)}" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">`
+            : "D";
+        const brand = $("#appBrandName"),
+          login = $("#loginBrandName");
+        const loginLogo = $("#loginLogo"),
+          logoImage = settings.loginLogo || settings.logo;
+        if (loginLogo)
+          loginLogo.innerHTML = logoImage
+            ? `<img src="${esc(logoImage)}" alt="${esc(name)} logo">`
+            : "D";
+        const appIcon = settings.logo || "darko-ims-icon-192.png";
+        const touchIcon = $("#appTouchIcon"),
+          favicon = $("#appFavicon");
+        if (touchIcon) touchIcon.href = appIcon;
+        if (favicon) favicon.href = appIcon;
+        const printHeader = $("#globalPrintHeader");
+        if (printHeader)
+          printHeader.innerHTML = printBrandMarkup(
+            "Sales and inventory report",
+          );
+        if (brand) brand.textContent = name;
+        if (login) login.textContent = name;
+        document.title = name + "  -  Sales & Inventory Management System";
+        const bg = settings.background || DEFAULT_MED_BACKGROUND;
+        document.body.style.background = `linear-gradient(rgba(241,248,246,.82),rgba(241,248,246,.82)),url("${bg}") center/cover fixed`;
+        const loginBg = settings.loginBackground || DEFAULT_LOGIN_BACKGROUND;
+        $("#loginWrap").style.backgroundImage =
+          `linear-gradient(rgba(8,37,39,.42),rgba(8,37,39,.58)),url("${loginBg}")`;
+      }
+      if (BC)
+        BC.onmessage = (e) => {
+          if (e.data && e.data.t === "sync") {
+            load();
+            applyBranding();
+            renderAll();
+          }
+        };
+
+      function toast(msg, err) {
+        const t = document.createElement("div");
+        t.className = "toast" + (err ? " err" : " ok");
+        t.textContent = msg;
+        $("#toast").appendChild(t);
+        setTimeout(() => t.remove(), 2600);
+      }
+      let pendingInstallPrompt = null;
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        pendingInstallPrompt = event;
+      });
+      async function installApp() {
+        if (pendingInstallPrompt) {
+          pendingInstallPrompt.prompt();
+          await pendingInstallPrompt.userChoice;
+          pendingInstallPrompt = null;
+          return;
+        }
+        toast(
+          "To install, use the browser menu and choose Install app or Add to Home Screen. Open this system over HTTPS.",
+        );
+      }
+      function status(p) {
+        return p.qty <= 0 ? "out" : p.qty <= settings.lowStock ? "low" : "ok";
+      }
+      function stockBadge(p) {
+        const s = status(p);
+        return s === "out"
+          ? '<span class="badge b-out">Out of stock</span>'
+          : s === "low"
+            ? '<span class="badge b-low">Low stock</span>'
+            : '<span class="badge b-ok">In stock</span>';
+      }
+      function daysTo(exp) {
+        if (!exp) return null;
+        return Math.ceil((new Date(exp + "T00:00:00") - Date.now()) / 86400000);
+      }
+      function expiryBadge(p) {
+        const d = daysTo(p.expiry);
+        if (d === null) return "";
+        if (d < 0) return '<span class="badge b-exp">Expired</span>';
+        if (d <= settings.expiryDays)
+          return '<span class="badge b-exp">Exp. in ' + d + "d</span>";
+        return "";
+      }
+      function daysToSafe(exp) {
+        if (!exp) return null;
+        return Math.ceil((new Date(exp + "T00:00:00") - Date.now()) / 86400000);
+      }
+
+      /* ---------- Views ---------- */
+      document.querySelectorAll("nav.tabs button").forEach(
+        (b) =>
+          (b.onclick = () => {
+            document
+              .querySelectorAll("nav.tabs button")
+              .forEach((x) => x.classList.remove("active"));
+            b.classList.add("active");
+            document
+              .querySelectorAll(".view")
+              .forEach((v) => v.classList.remove("active"));
+            $("#view-" + b.dataset.v).classList.add("active");
+            renderAll();
+          }),
+      );
+
+      function renderAll() {
+        const v = document.querySelector("nav button.active").dataset.v;
+        ({
+          dash: renderDash,
+          pos: renderPOS,
+          inv: renderInv,
+          sales: renderSales,
+          ledger: renderLedger,
+          finance: renderFinance,
+          aging: renderAging,
+          alerts: renderAlerts,
+          settings: renderSettings,
+        })[v]();
+      }
+      function toggleSidebar(forceOpen) {
+        const shell = document.getElementById("appShell"),
+          button = document.getElementById("navToggle");
+        const closed =
+          typeof forceOpen === "boolean"
+            ? !forceOpen
+            : !shell.classList.contains("nav-closed");
+        shell.classList.toggle("nav-closed", closed);
+        button.setAttribute("aria-expanded", String(!closed));
+        button.textContent = closed ? "Show navigation" : "Hide navigation";
+        try {
+          localStorage.setItem("darko_nav_collapsed_v1", closed ? "1" : "0");
+        } catch {}
+      }
+      function restoreSidebarPreference() {
+        let closed = false;
+        try {
+          closed = localStorage.getItem("darko_nav_collapsed_v1") === "1";
+        } catch {}
+        toggleSidebar(!closed);
+      }
+      /* ---------- Dashboard ---------- */
+      function renderDash() {
+        const totalVal = sumMoney(products.map((p) => p.qty * p.price));
+        const low = products.filter((p) => status(p) === "low").length;
+        const out = products.filter((p) => status(p) === "out").length;
+        const today = new Date().toISOString().slice(0, 10);
+        const todaySales = sales.filter((s) => s.date.slice(0, 10) === today);
+        const todayRev = sumMoney(todaySales.map((x) => x.total));
+        const totalRev = sumMoney(sales.map((x) => x.total));
+        const unitsSold = sales.reduce(
+          (s, x) => s + x.items.reduce((a, i) => a + i.qty, 0),
+          0,
+        );
+        const recv = sumMoney(
+          parties
+            .filter((p) => p.type === "customer")
+            .map((p) => Math.max(0, partyBalance(p))),
+        );
+        const payb = sumMoney(
+          parties
+            .filter((p) => p.type === "supplier")
+            .map((p) => Math.max(0, partyBalance(p))),
+        );
+
+        // top sellers
+        const cnt = {};
+        sales.forEach((s) =>
+          s.items.forEach((i) => {
+            cnt[i.name] = (cnt[i.name] || 0) + i.qty;
+          }),
+        );
+        const top = Object.entries(cnt)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6);
+        const max = top.length ? top[0][1] : 1;
+        const bars = top
+          .map(
+            ([n, v]) =>
+              `<div class="bar-col" title="${esc(n)}"><div class="bv">${v}</div><div class="bar" style="height:${Math.max(6, (v / max) * 110)}px"></div><div class="bl">${esc(n.length > 18 ? n.slice(0, 17) + "..." : n)}</div></div>`,
+          )
+          .join("");
+
+        const trendDays = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setUTCHours(0, 0, 0, 0);
+          d.setUTCDate(d.getUTCDate() - (6 - i));
+          return {
+            key: d.toISOString().slice(0, 10),
+            label: d.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            }),
+            cents: 0,
+          };
+        });
+        const trendByDate = Object.fromEntries(
+          trendDays.map((d) => [d.key, d]),
+        );
+        sales.forEach((s) => {
+          const day = trendByDate[String(s.date || "").slice(0, 10)];
+          if (day) day.cents += toCents(s.total || 0);
+        });
+        const trendMax = Math.max(100, ...trendDays.map((d) => d.cents));
+        const chartW = 720,
+          chartH = 250,
+          left = 56,
+          right = 18,
+          topY = 18,
+          bottom = 42;
+        const graphW = chartW - left - right,
+          graphH = chartH - topY - bottom;
+        const points = trendDays.map((d, i) => ({
+          x: left + (i * graphW) / (trendDays.length - 1),
+          y: topY + graphH - (d.cents / trendMax) * graphH,
+          ...d,
+        }));
+        const salesTrendSvg = `<svg viewBox="0 0 ${chartW} ${chartH}" role="img" aria-label="Sales revenue for the last seven days" style="display:block;width:100%;height:auto;min-height:190px">
+          ${[0, 1, 2, 3]
+            .map((i) => {
+              const y = topY + (i * graphH) / 3,
+                val = fromCents(Math.round((trendMax * (3 - i)) / 3));
+              return `<line x1="${left}" y1="${y}" x2="${chartW - right}" y2="${y}" stroke="#e2e8f0"/><text x="${left - 8}" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="11">${esc(val.toFixed(0))}</text>`;
+            })
+            .join("")}
+          <polyline fill="none" stroke="#0f766e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${points.map((p) => `${p.x},${p.y}`).join(" ")}"/>
+          ${points.map((p) => `<circle cx="${p.x}" cy="${p.y}" r="5" fill="#0f766e"><title>${esc(p.label)}: ${esc(money(fromCents(p.cents)))}</title></circle><text x="${p.x}" y="${chartH - 14}" text-anchor="middle" fill="#64748b" font-size="11">${esc(p.label)}</text>`).join("")}
+        </svg>`;
+
+        const recent = [...sales]
+          .reverse()
+          .slice(0, 6)
+          .map(
+            (s) =>
+              `<tr><td>#${s.no}</td><td>${s.date.slice(0, 10)}</td><td>${esc(s.customer || "Walk-in")}</td><td>${s.items.length} item(s)</td><td class="num"><b>${money(s.total)}</b></td></tr>`,
+          )
+          .join("");
+
+        $("#view-dash").innerHTML = `
+  <h2>Dashboard</h2><div class="sub">Live overview  -  updates instantly across every open tab.</div>
+  <div class="grid-cards">
+    <div class="card teal"><div class="k">Products</div><div class="v">${products.length}</div><div class="d">catalogue items</div></div>
+    <div class="card blue"><div class="k">Stock Value</div><div class="v">${money(totalVal)}</div><div class="d">at current prices</div></div>
+    <div class="card amber"><div class="k">Low Stock</div><div class="v">${low}</div><div class="d"><= ${settings.lowStock} units</div></div>
+    <div class="card red"><div class="k">Out of Stock</div><div class="v">${out}</div><div class="d">needs restock</div></div>
+    <div class="card green"><div class="k">Sales Today</div><div class="v">${money(todayRev)}</div><div class="d">${todaySales.length} transaction(s)</div></div>
+    <div class="card teal"><div class="k">Total Revenue</div><div class="v">${money(totalRev)}</div><div class="d">${unitsSold} units sold</div></div>
+    <div class="card amber"><div class="k">Receivables</div><div class="v">${money(recv)}</div><div class="d">owed by customers</div></div>
+    <div class="card red"><div class="k">Payables</div><div class="v">${money(payb)}</div><div class="d">owed to suppliers</div></div>
+  </div>
+  <div class="panel"><h3>Top Selling Products (by units)</h3>
+    ${top.length ? `<div class="bar-chart">${bars}</div>` : '<div class="empty">No sales recorded yet  -  make your first sale in the POS tab.</div>'}
+  </div>
+  <div class="panel"><h3>Recent Transactions</h3>
+    ${recent ? `<table><thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Items</th><th class="num">Total</th></tr></thead><tbody>${recent}</tbody></table>` : '<div class="empty">No transactions yet.</div>'}
+  </div>
+  <div class="panel"><h3>Sales Trend — Last 7 Days</h3><div class="sub">Revenue per day, refreshed with dashboard data.</div>${sales.length ? salesTrendSvg : '<div class="empty">Sales will appear here as transactions are recorded.</div>'}</div>`;
+      }
+
+      function renderFinance() {
+        const revenue = sumMoney(sales.map((s) => s.total || 0));
+        const stock = sumMoney(
+          products.map((p) => Number(p.qty || 0) * Number(p.price || 0)),
+        );
+        const recv = sumMoney(
+          parties
+            .filter((p) => p.type === "customer")
+            .map((p) => Math.max(0, partyBalance(p))),
+        );
+        const pay = sumMoney(
+          parties
+            .filter((p) => p.type === "supplier")
+            .map((p) => Math.max(0, partyBalance(p))),
+        );
+        const financeDays = Array.from({ length: 14 }, (_, i) => {
+          const d = new Date();
+          d.setUTCHours(0, 0, 0, 0);
+          d.setUTCDate(d.getUTCDate() - (13 - i));
+          return {
+            key: d.toISOString().slice(0, 10),
+            label: d.toLocaleDateString(undefined, {
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            }),
+            cents: 0,
+          };
+        });
+        const financeByDate = Object.fromEntries(
+          financeDays.map((d) => [d.key, d]),
+        );
+        sales.forEach((s) => {
+          const day = financeByDate[String(s.date || "").slice(0, 10)];
+          if (day) day.cents += toCents(s.total || 0);
+        });
+        const financeMax = Math.max(100, ...financeDays.map((d) => d.cents));
+        const fw = 760,
+          fh = 250,
+          fl = 60,
+          fr = 18,
+          ft = 18,
+          fb = 42,
+          gw = fw - fl - fr,
+          gh = fh - ft - fb;
+        const financePoints = financeDays.map((d, i) => ({
+          x: fl + (i * gw) / (financeDays.length - 1),
+          y: ft + gh - (d.cents / financeMax) * gh,
+          ...d,
+        }));
+        const financeGraph = `<svg viewBox="0 0 ${fw} ${fh}" role="img" aria-label="Daily sales revenue over the last fourteen days" style="display:block;width:100%;height:auto;min-height:190px">${[
+          0, 1, 2, 3,
+        ]
+          .map((i) => {
+            const y = ft + (i * gh) / 3,
+              v = fromCents(Math.round((financeMax * (3 - i)) / 3));
+            return `<line x1="${fl}" y1="${y}" x2="${fw - fr}" y2="${y}" stroke="#e2e8f0"/><text x="${fl - 8}" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="11">${esc(v.toFixed(0))}</text>`;
+          })
+          .join(
+            "",
+          )}<polyline fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${financePoints.map((p) => `${p.x},${p.y}`).join(" ")}"/>${financePoints.map((p, i) => `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#2563eb"><title>${esc(p.label)}: ${esc(money(fromCents(p.cents)))}</title></circle>${i % 2 === 0 || i === financePoints.length - 1 ? `<text x="${p.x}" y="${fh - 14}" text-anchor="middle" fill="#64748b" font-size="10">${esc(p.label)}</text>` : ""}`).join("")}</svg>`;
+        const rows = sales
+          .slice()
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map(
+            (s) =>
+              `<tr><td>${new Date(s.date).toLocaleDateString()}</td><td>#${s.no}</td><td>${esc(s.customer || "Walk-in")}</td><td>${esc(s.payment || "Cash")}</td><td class="num">${money(s.total)}</td></tr>`,
+          )
+          .join("");
+        $("#view-finance").innerHTML =
+          `<h2>Financial Reports</h2><div class="sub">Live summaries from sales, inventory and customer/supplier ledgers.</div><div class="toolbar no-print"><button class="btn ghost" onclick="window.print()">Print reports</button><button class="btn ghost" onclick="exportDataCSV()">Export financial data</button></div>
+        <div class="panel"><h3>Sales Revenue Trend — Last 14 Days</h3><div class="sub">Daily recorded sales revenue, refreshed with Financial Reports.</div>${financeGraph}</div>
+        <div class="panel"><h3>Income Statement / P&amp;L</h3><table><tbody><tr><td>Recorded sales revenue</td><td class="num">${money(revenue)}</td></tr><tr><td>Cost of goods sold</td><td>Not tracked</td></tr><tr><td>Operating expenses</td><td>Not tracked</td></tr><tr><td><b>Net income</b></td><td><b>Cannot calculate from recorded data</b></td></tr></tbody></table><div class="settings-note">Purchase cost and operating expenses are not recorded. Gross profit and net income would be misleading without them.</div></div>
+        <div class="panel"><h3>Balance Sheet — known balances</h3><table><tbody><tr><th colspan="2">Assets</th></tr><tr><td>Inventory at selling price (estimate, not cost)</td><td class="num">${money(stock)}</td></tr><tr><td>Customer receivables</td><td class="num">${money(recv)}</td></tr><tr><th colspan="2">Liabilities</th></tr><tr><td>Supplier payables</td><td class="num">${money(pay)}</td></tr><tr><td>Cash, bank, equity and other liabilities</td><td>Not tracked</td></tr></tbody></table><div class="settings-note">Partial statement only: cash, bank, owner equity and inventory cost are not present in the current records.</div></div>
+        <div class="panel"><h3>Sales detail</h3><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Receipt</th><th>Customer</th><th>Payment</th><th class="num">Revenue (USD)</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="empty">No sales recorded.</td></tr>'}</tbody></table></div></div>`;
+      }
+      /* ---------- POS ---------- */
+      function renderPOS() {
+        const cats = [...new Set(products.map((p) => p.cat))].sort();
+        $("#view-pos").innerHTML = `
+  <h2>New Sale (POS)</h2><div class="sub">Click a product to add it to the cart - stock is deducted automatically on checkout.</div>
+  <div class="pos-wrap">
+    <div>
+      <div class="toolbar">
+        <input id="posSearch" placeholder=" Search product..." style="flex:1;min-width:180px" value="${esc(posFilter)}">
+        <select id="posCat"><option value="">All categories</option>${cats.map((c) => `<option ${c === posCat ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+      </div>
+      <div class="prod-grid" id="posGrid"></div>
+    </div>
+    <div class="panel" style="align-self:start">
+      <h3>Cart (${cart.reduce((s, i) => s + i.qty, 0)} units)</h3>
+      <div class="cart-list" id="cartList"></div>
+      <div style="margin-top:12px">
+        <div class="totline"><span>Subtotal</span><b id="cartSub"></b></div>
+        <div class="totline grand"><span>TOTAL</span><span id="cartTot"></span></div>
+        <input id="custName" placeholder="Customer name (required for credit)" style="width:100%;margin:10px 0 8px" list="custList">
+        <datalist id="custList">${parties
+          .filter((p) => p.type === "customer")
+          .map((p) => `<option value="${esc(p.name)}">`)
+          .join("")}</datalist>
+        <select id="payMode" style="width:100%;margin-bottom:10px"><option>Cash</option><option>Mobile Money</option><option>Card</option><option>Credit</option></select>
+        <label>Payment currency</label><select id="payCurrency" style="width:100%;margin-bottom:10px"><option value="USD">USD</option><option value="LRD">LRD (${Number(settings.lrdRate || 190).toFixed(2)} LRD per USD)</option></select>
+        <button class="btn green" style="width:100%" onclick="checkout()"> Complete Sale</button>
+        <button class="btn ghost" style="width:100%;margin-top:8px" onclick="cart=[];renderPOS()">Clear Cart</button>
+      </div>
+    </div>
+  </div>`;
+        drawPosGrid();
+        drawCart();
+        $("#posSearch").oninput = (e) => {
+          posFilter = e.target.value;
+          drawPosGrid();
+        };
+        $("#posCat").onchange = (e) => {
+          posCat = e.target.value;
+          drawPosGrid();
+        };
+      }
+      function drawPosGrid() {
+        const f = posFilter.toLowerCase(),
+          c = posCat;
+        const list = products.filter(
+          (p) =>
+            (!c || p.cat === c) &&
+            (!f ||
+              p.name.toLowerCase().includes(f) ||
+              p.sku.toLowerCase().includes(f)),
+        );
+        $("#posGrid").innerHTML =
+          list
+            .map((p) => {
+              const s = status(p);
+              return `<div class="pcard ${s === "out" ? "disabled" : ""}" ${s === "out" ? "" : `onclick="addToCart(${p.id})"`}>
+      <div class="pn">${esc(p.name)}</div>
+      <div class="pp">${money(p.price)} <small style="font-weight:400;color:var(--muted)">/ ${esc(p.unit)}</small></div>
+      <div class="ps">${esc(p.sku)}  |  ${p.qty} ${esc(p.unit)} available ${expiryBadge(p)}</div>
+    </div>`;
+            })
+            .join("") || '<div class="empty">No products match.</div>';
+      }
+      function drawCart() {
+        const box = $("#cartList");
+        if (!box) return;
+        box.innerHTML =
+          cart
+            .map(
+              (i, idx) => `<div class="cart-row">
+    <div class="nm">${esc(i.name)}<br><small style="color:var(--muted)">${money(i.price)} x ${i.qty}</small></div>
+    <button class="qtybtn" onclick="chQty(${idx},-1)">-</button><b>${i.qty}</b>
+    <button class="qtybtn" onclick="chQty(${idx},1)">+</button>
+    <b style="min-width:64px;text-align:right">${money(i.price * i.qty)}</b>
+    <button class="qtybtn" style="color:var(--red)" onclick="cart.splice(${idx},1);drawCart()" aria-label="Remove item">x</button>
+  </div>`,
+            )
+            .join("") || '<div class="empty">Cart is empty.</div>';
+        const t = sumMoney(cart.map((i) => i.price * i.qty));
+        $("#cartSub").textContent = money(t);
+        $("#cartTot").textContent = money(t);
+      }
+      function addToCart(id) {
+        const p = products.find((x) => x.id === id);
+        if (!p) return;
+        const inCart = cart.find((i) => i.id === id);
+        const already = inCart ? inCart.qty : 0;
+        if (already + 1 > p.qty) {
+          toast("Only " + p.qty + " " + p.unit + " in stock!", true);
+          return;
+        }
+        if (inCart) inCart.qty++;
+        else
+          cart.push({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            qty: 1,
+            unit: p.unit,
+          });
+        drawCart();
+      }
+      function chQty(idx, d) {
+        const it = cart[idx],
+          p = products.find((x) => x.id === it.id);
+        if (d > 0 && it.qty + 1 > p.qty) {
+          toast("Only " + p.qty + " " + p.unit + " in stock!", true);
+          return;
+        }
+        it.qty += d;
+        if (it.qty <= 0) cart.splice(idx, 1);
+        drawCart();
+      }
+      let lastReceipt = null;
+      function checkout() {
+        if (!cart.length) {
+          toast("Cart is empty", true);
+          return;
+        }
+        if ($("#payMode").value === "Credit" && !$("#custName").value.trim()) {
+          toast("Credit sale requires a customer name", true);
+          return;
+        }
+        for (const i of cart) {
+          const p = products.find((x) => x.id === i.id);
+          if (!p || p.qty < i.qty) {
+            toast("Insufficient stock for " + i.name, true);
+            return;
+          }
+        }
+        cart.forEach((i) => {
+          const p = products.find((x) => x.id === i.id);
+          p.qty -= i.qty;
+        });
+        const sale = {
+          no: sales.length ? Math.max(...sales.map((s) => s.no)) + 1 : 1001,
+          date: new Date().toISOString(),
+          customer: $("#custName").value,
+          payment: $("#payMode").value,
+          items: cart.map((i) => ({ ...i })),
+          total: sumMoney(cart.map((i) => i.price * i.qty)),
+          currency: $("#payCurrency").value,
+          exchangeRate: Number(settings.lrdRate || 190),
+        };
+        sales.push(sale);
+        lastReceipt = sale;
+        cart = [];
+        if (sale.payment === "Credit")
+          postEntry({
+            date: sale.date.slice(0, 10),
+            partyId: ensureCustomer(sale.customer).id,
+            dr: sale.total,
+            cr: 0,
+            note: "Credit sale  -  Receipt #" + sale.no,
+          });
+        persist();
+        toast("Sale #" + sale.no + " completed  -  stock updated ");
+        renderPOS();
+        showReceipt(sale);
+      }
+      function showReceipt(s) {
+        $("#modalBox").innerHTML = `<div class="receipt">
+    ${printBrandMarkup("Sales invoice and receipt")}<h4 style="text-align:center;margin:0 0 6px">Sales Invoice / Receipt</h4>
+    <p style="text-align:center">Invoice / Receipt No. ${s.no}</p><hr>
+    <p>Date: ${new Date(s.date).toLocaleString()}</p>
+    <p>Customer: ${esc(s.customer || "Walk-in")}  |  ${esc(s.payment)}</p><hr>
+    <table style="width:100%">${s.items.map((i) => `<tr><td>${esc(i.name)}<br><small>${i.qty} x ${money(i.price)}</small></td><td class="num">${money(i.price * i.qty)}</td></tr>`).join("")}</table><hr>
+    <p style="text-align:right;font-weight:bold">TOTAL: ${money(s.total)}</p><p style="text-align:right">Paid: ${moneyFor(s.total, s.currency || "USD")}</p><hr>
+    <p style="text-align:center">Thank you for your business!</p></div>
+    <div style="text-align:right;margin-top:12px"><button class="btn ghost" onclick="printPOS()">POS print</button> <button class="btn ghost" onclick="printA4Receipt()">A4 print</button> <button class="btn" onclick="closeModal()">Close</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function printInMode(...classes) {
+        const cleanup = () => {
+          document.body.classList.remove(...classes);
+          window.removeEventListener("afterprint", cleanup);
+        };
+        window.addEventListener("afterprint", cleanup, { once: true });
+        document.body.classList.add(...classes);
+        requestAnimationFrame(() => setTimeout(() => window.print(), 80));
+        setTimeout(cleanup, 120000);
+      }
+      function printPOS() {
+        printInMode("print-pos");
+      }
+      function printA4Receipt() {
+        printInMode("print-a4", "print-receipt");
+      }
+      function closeModal() {
+        $("#modalWrap").classList.remove("open");
+      }
+      $("#modalWrap").addEventListener("click", (e) => {
+        if (e.target.id === "modalWrap") closeModal();
+      });
+
+      /* ---------- Inventory ---------- */
+      let invFilter = "",
+        invSearch = "";
+      function renderInv() {
+        const cats = [...new Set(products.map((p) => p.cat))].sort();
+        $("#view-inv").innerHTML = `
+  <h2>Inventory</h2><div class="sub">${products.length} products  |  stock levels update in real time.</div>
+  <div class="toolbar">
+    <input id="invSearch" placeholder=" Search name or SKU..." style="flex:1;min-width:180px" value="${esc(invSearch)}">
+    <select id="invCat"><option value="">All categories</option>${cats.map((c) => `<option ${c === invFilter ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+    <select id="invStat"><option value="">Any status</option><option ${invStat === "ok" ? "selected" : ""} value="ok">In stock</option><option ${invStat === "low" ? "selected" : ""} value="low">Low</option><option ${invStat === "out" ? "selected" : ""} value="out">Out</option></select>
+    <button class="btn" onclick="editProduct()">Add Product</button>
+    <button class="btn ghost" onclick="exportCSV()">Export CSV</button><button class="btn ghost" onclick="document.getElementById('bulkFile').click()">Bulk Upload CSV</button><input id="bulkFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importInventoryCSV(this)"><button class="btn ghost" onclick="printInventoryA4()">Print A4</button>
+  </div>
+  <div class="panel" style="overflow:auto"><table id="invTable">
+    <thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Stock</th><th>Unit</th><th class="num">Price</th><th class="num">Value</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody id="invBody"></tbody></table></div>`;
+        drawInv();
+        $("#invSearch").oninput = (e) => {
+          invSearch = e.target.value;
+          drawInv();
+        };
+        $("#invCat").onchange = (e) => {
+          invFilter = e.target.value;
+          drawInv();
+        };
+        $("#invStat").onchange = (e) => {
+          invStat = e.target.value;
+          drawInv();
+        };
+      }
+      let invStat = "";
+      function drawInv() {
+        const f = invSearch.toLowerCase();
+        const list = products.filter(
+          (p) =>
+            (!invFilter || p.cat === invFilter) &&
+            (!invStat || status(p) === invStat) &&
+            (!f ||
+              p.name.toLowerCase().includes(f) ||
+              p.sku.toLowerCase().includes(f)),
+        );
+        $("#invBody").innerHTML =
+          list
+            .map(
+              (p) => `<tr>
+    <td><code>${esc(p.sku)}</code></td><td><b>${esc(p.name)}</b></td><td><span class="badge b-cat">${esc(p.cat)}</span></td>
+    <td><b>${p.qty}</b></td><td>${esc(p.unit)}</td><td class="num">${money(p.price)}</td><td class="num">${money(p.qty * p.price)}</td>
+    <td>${p.expiry || " - "} ${expiryBadge(p)}</td><td>${stockBadge(p)}</td>
+    <td style="white-space:nowrap">
+      <button class="btn sm ghost" onclick="restock(${p.id})"> Stock</button>
+      <button class="btn sm ghost" onclick="editProduct(${p.id})">Edit</button>
+      <button class="btn sm danger" onclick="delProduct(${p.id})">Delete</button>
+    </td></tr>`,
+            )
+            .join("") ||
+          '<tr><td colspan="10" class="empty">No products match.</td></tr>';
+      }
+      function editProduct(id) {
+        if (!requireAdmin()) return;
+        const p = id
+          ? products.find((x) => x.id === id)
+          : {
+              id: 0,
+              sku: "",
+              name: "",
+              cat: "Other",
+              unit: "Pcs",
+              qty: 0,
+              price: 0,
+              expiry: "",
+            };
+        $("#modalBox").innerHTML =
+          `<h3 style="margin-bottom:14px">${id ? "Edit Product" : "Add New Product"}</h3>
+  <div class="form-grid">
+    <div class="full"><label>Product name</label><input id="fName" value="${esc(p.name)}" style="width:100%"></div>
+    <div><label>SKU</label><input id="fSku" value="${esc(p.sku)}" placeholder="auto" style="width:100%"></div>
+    <div><label>Category</label><input id="fCat" value="${esc(p.cat)}" list="catList" style="width:100%"><datalist id="catList">${[...new Set(products.map((x) => x.cat))].map((c) => `<option>${esc(c)}</option>`).join("")}</datalist></div>
+    <div><label>Unit</label><input id="fUnit" value="${esc(p.unit)}" style="width:100%"></div>
+    <div><label>Price (USD)</label><input id="fPrice" type="number" step="0.01" min="0" value="${p.price}" style="width:100%"></div>
+    <div><label>Quantity in stock</label><input id="fQty" type="number" min="0" value="${p.qty}" style="width:100%"></div>
+    <div class="full"><label>Expiry date (optional)</label><input id="fExp" type="date" value="${p.expiry || ""}" style="width:100%"></div>
+  </div>
+  <div style="text-align:right;margin-top:16px"><button class="btn ghost" onclick="closeModal()">Cancel</button> <button class="btn" onclick="saveProduct(${id})"> Save</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function saveProduct(id) {
+        if (!requireAdmin()) return;
+        const name = $("#fName").value.trim(),
+          price = fromCents(toCents($("#fPrice").value)),
+          qty = parseInt($("#fQty").value);
+        if (
+          !name ||
+          !Number.isFinite(price) ||
+          price < 0 ||
+          !Number.isInteger(qty) ||
+          qty < 0
+        ) {
+          toast(
+            "Enter a product name, non-negative price and whole-number quantity",
+            true,
+          );
+          return;
+        }
+        if (id) {
+          Object.assign(
+            products.find((x) => x.id === id),
+            {
+              name,
+              sku: $("#fSku").value.trim() || "DK-" + id,
+              cat: $("#fCat").value.trim() || "Other",
+              unit: $("#fUnit").value.trim() || "Pcs",
+              price,
+              qty,
+              expiry: $("#fExp").value,
+            },
+          );
+          toast("Product updated ");
+        } else {
+          const nid = Math.max(0, ...products.map((x) => x.id)) + 1;
+          products.push({
+            id: nid,
+            sku:
+              $("#fSku").value.trim() || "DK-" + String(nid).padStart(3, "0"),
+            name,
+            cat: $("#fCat").value.trim() || "Other",
+            unit: $("#fUnit").value.trim() || "Pcs",
+            price,
+            qty,
+            expiry: $("#fExp").value,
+          });
+          toast("Product added ");
+        }
+        closeModal();
+        persist();
+        drawInv();
+      }
+      function restock(id) {
+        const p = products.find((x) => x.id === id);
+        $("#modalBox").innerHTML =
+          `<h3 style="margin-bottom:6px">Restock: ${esc(p.name)}</h3>
+  <p class="sub">Current stock: ${p.qty} ${esc(p.unit)}</p>
+  <div class="form-grid">
+    <div><label>Add quantity</label><input id="rQty" type="number" min="1" value="10" style="width:100%"></div>
+    <div><label>Unit cost (USD)</label><input id="rCost" type="number" step="0.01" min="0" value="${p.price.toFixed(2)}" style="width:100%"></div>
+    <div><label>Supplier (for credit purchases)</label><input id="rSup" list="supList" placeholder="Supplier name" style="width:100%"><datalist id="supList">${parties
+      .filter((x) => x.type === "supplier")
+      .map((x) => `<option value="${esc(x.name)}">`)
+      .join("")}</datalist></div>
+    <div><label>Payment</label><select id="rPay" style="width:100%"><option>Cash</option><option>On credit</option></select></div>
+  </div>
+  <div style="text-align:right;margin-top:14px"><button class="btn ghost" onclick="closeModal()">Cancel</button> <button class="btn green" onclick="doRestock(${id})"> Add</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function doRestock(id) {
+        const q = parseInt($("#rQty").value);
+        if (!q || q < 1) {
+          toast("Enter a valid quantity", true);
+          return;
+        }
+        if ($("#rPay").value === "On credit" && !requireAdmin()) return;
+        const p = products.find((x) => x.id === id);
+        p.qty += q;
+        if ($("#rPay").value === "On credit") {
+          const sup = $("#rSup").value.trim();
+          if (!sup) {
+            toast("Credit purchase requires a supplier name", true);
+            return;
+          }
+          const cost = parseFloat($("#rCost").value) || 0;
+          postEntry({
+            date: new Date().toISOString().slice(0, 10),
+            partyId: ensureSupplier(sup).id,
+            dr: 0,
+            cr: +(q * cost).toFixed(2),
+            note: "Purchase on credit  -  " + p.name + " x" + q + " " + p.unit,
+          });
+        }
+        closeModal();
+        persist();
+        drawInv();
+        toast("Stock added ");
+      }
+      function delProduct(id) {
+        if (!requireAdmin()) return;
+        const p = products.find((x) => x.id === id);
+        $("#modalBox").innerHTML =
+          `<h3>Delete product?</h3><p style="margin:10px 0"><b>${esc(p.name)}</b> will be removed from inventory.</p>
+  <div style="text-align:right"><button class="btn ghost" onclick="closeModal()">Cancel</button> <button class="btn danger" onclick="doDel(${id})">Delete</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function doDel(id) {
+        products = products.filter((x) => x.id !== id);
+        closeModal();
+        persist();
+        drawInv();
+        toast("Product deleted");
+      }
+
+      /* ---------- Sales History ---------- */
+      function renderSales() {
+        $("#view-sales").innerHTML = `
+  <h2>Sales History</h2><div class="sub">Every transaction recorded by the system.</div>
+  <div class="toolbar"><button class="btn ghost" onclick="exportSalesCSV()"> Export Sales CSV</button></div>
+  <div class="panel" style="overflow:auto"><table>
+  <thead><tr><th>Receipt</th><th>Date &amp; Time</th><th>Customer</th><th>Payment</th><th>Items</th><th class="num">Total</th><th></th></tr></thead>
+  <tbody>${
+    [...sales]
+      .reverse()
+      .map(
+        (s) => `<tr>
+    <td><b>#${s.no}</b></td><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.customer || "Walk-in")}</td><td>${esc(s.payment || "Cash")}</td>
+    <td>${s.items.map((i) => esc(i.name) + " x" + i.qty).join("<br>")}</td><td class="num"><b>${money(s.total)}</b></td>
+    <td><button class="btn sm ghost" onclick='showReceipt(${JSON.stringify(s).replace(/'/g, "&#39;")})'>View</button>
+        <button class="btn sm danger" onclick="refundSale(${s.no})"> Refund</button></td></tr>`,
+      )
+      .join("") || '<tr><td colspan="7" class="empty">No sales yet.</td></tr>'
+  }</tbody></table></div>`;
+      }
+      function refundSale(no) {
+        if (!requireAdmin()) return;
+        const s = sales.find((x) => x.no === no);
+        if (!s) return;
+        if (
+          !confirm(
+            "Refund sale #" + no + "? Stock will be returned to inventory.",
+          )
+        )
+          return;
+        s.items.forEach((i) => {
+          const p = products.find((x) => x.id === i.id);
+          if (p) p.qty += i.qty;
+        });
+        sales = sales.filter((x) => x.no !== no);
+        persist();
+        renderSales();
+        toast("Sale #" + no + " refunded  -  stock restored");
+      }
+
+      /* ---------- Ledgers (Customers & Suppliers) ----------
+   Convention: a POSITIVE balance means the account owes Darko  - 
+   receivable for customers, payable for suppliers. */
+      function partyBalance(p) {
+        const sum = fromCents(
+          ledger
+            .filter((e) => e.partyId === p.id)
+            .reduce((s, e) => s + toCents(e.dr || 0) - toCents(e.cr || 0), 0),
+        );
+        return p.type === "supplier"
+          ? fromCents(toCents(p.openingBalance) - toCents(sum))
+          : fromCents(toCents(p.openingBalance) + toCents(sum));
+      }
+      function partyEntries(p) {
+        return ledger
+          .filter((e) => e.partyId === p.id)
+          .slice()
+          .sort((a, b) =>
+            a.date === b.date ? a.id - b.id : a.date < b.date ? -1 : 1,
+          );
+      }
+      function runningRows(p) {
+        let bal = toCents(p.openingBalance);
+        return partyEntries(p).map((e) => {
+          bal +=
+            p.type === "supplier"
+              ? toCents(e.cr || 0) - toCents(e.dr || 0)
+              : toCents(e.dr || 0) - toCents(e.cr || 0);
+          return Object.assign({}, e, { bal: fromCents(bal) });
+        });
+      }
+      function nextPartyId() {
+        return parties.length ? Math.max(...parties.map((x) => x.id)) + 1 : 1;
+      }
+      function nextEntryId() {
+        return ledger.length ? Math.max(...ledger.map((x) => x.id)) + 1 : 1;
+      }
+      function postEntry(e) {
+        e.id = nextEntryId();
+        ledger.push(e);
+      }
+      function ensureCustomer(name) {
+        let p = parties.find(
+          (x) =>
+            x.type === "customer" &&
+            x.name.toLowerCase() === name.toLowerCase(),
+        );
+        if (!p) {
+          p = {
+            id: nextPartyId(),
+            type: "customer",
+            name: name.trim(),
+            phone: "",
+            openingBalance: 0,
+          };
+          parties.push(p);
+        }
+        return p;
+      }
+      function ensureSupplier(name) {
+        let p = parties.find(
+          (x) =>
+            x.type === "supplier" &&
+            x.name.toLowerCase() === name.toLowerCase(),
+        );
+        if (!p) {
+          p = {
+            id: nextPartyId(),
+            type: "supplier",
+            name: name.trim(),
+            phone: "",
+            openingBalance: 0,
+          };
+          parties.push(p);
+        }
+        return p;
+      }
+      function renderLedger() {
+        const custs = parties.filter((p) => p.type === "customer"),
+          sups = parties.filter((p) => p.type === "supplier");
+        const recv = parties
+          .filter((p) => p.type === "customer")
+          .reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
+        const payb = parties
+          .filter((p) => p.type === "supplier")
+          .reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
+        const row = (p) => {
+          const b = partyBalance(p);
+          const tag =
+            b > 0.005
+              ? `<span class="badge b-low">${p.type === "supplier" ? "Payable" : "Receivable"}</span>`
+              : b < -0.005
+                ? '<span class="badge b-cat">Advance</span>'
+                : '<span class="badge b-ok">Settled</span>';
+          return `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.phone || " - ")}</td><td class="num">${money(p.openingBalance)}</td><td class="num"><b>${money(Math.abs(b))}</b> ${tag}</td>
+  <td style="white-space:nowrap"><button class="btn sm" onclick="statement(${p.id})"> Statement</button> ${isAdmin() ? `<button class="btn sm ghost" onclick="recordPayment(${p.id})"> Payment</button>` : ""}</td></tr>`;
+        };
+        $("#view-ledger").innerHTML = `
+  <h2>Customer &amp; Supplier Ledgers</h2><div class="sub">Double-entry accounts  -  credit sales debit the customer, payments credit them; credit purchases credit the supplier, payments debit them. Sorted by date with running balances.</div>
+  <div class="grid-cards">
+   <div class="card amber"><div class="k">Total Receivable</div><div class="v">${money(recv)}</div><div class="d">owed by customers</div></div>
+   <div class="card red"><div class="k">Total Payable</div><div class="v">${money(payb)}</div><div class="d">owed to suppliers</div></div>
+   <div class="card teal"><div class="k">Customers</div><div class="v">${custs.length}</div><div class="d">ledger accounts</div></div>
+   <div class="card blue"><div class="k">Suppliers</div><div class="v">${sups.length}</div><div class="d">ledger accounts</div></div>
+  </div>
+  <div class="toolbar"><button class="btn" onclick="addParty()"> Add Customer / Supplier</button><button class="btn ghost" onclick="exportBalancesCSV()"> Export Balances CSV</button></div>
+  <div class="panel"><h3> Customers (Receivables)</h3><table><thead><tr><th>Name</th><th>Phone</th><th class="num">Opening</th><th class="num">Balance</th><th>Actions</th></tr></thead><tbody>${custs.map(row).join("") || '<tr><td colspan="5" class="empty">None yet.</td></tr>'}</tbody></table></div>
+  <div class="panel"><h3> Suppliers (Payables)</h3><table><thead><tr><th>Name</th><th>Phone</th><th class="num">Opening</th><th class="num">Balance</th><th>Actions</th></tr></thead><tbody>${sups.map(row).join("") || '<tr><td colspan="5" class="empty">None yet.</td></tr>'}</tbody></table></div>`;
+      }
+      function statement(pid, from, to) {
+        const p = parties.find((x) => x.id === pid);
+        stmtRange = { from: from || "", to: to || "" };
+        const all = partyEntries(p),
+          dir =
+            p.type === "supplier"
+              ? (e) => (e.cr || 0) - (e.dr || 0)
+              : (e) => (e.dr || 0) - (e.cr || 0);
+        let opening = p.openingBalance;
+        all.forEach((e) => {
+          if (stmtRange.from && e.date < stmtRange.from) opening += dir(e);
+        });
+        const inR = all.filter(
+          (e) =>
+            (!stmtRange.from || e.date >= stmtRange.from) &&
+            (!stmtRange.to || e.date <= stmtRange.to),
+        );
+        let bal = opening;
+        const rows = inR.map((e) => {
+          bal += dir(e);
+          return Object.assign({}, e, { bal });
+        });
+        const lbl = p.type === "supplier" ? "Payable" : "Receivable";
+        const rangeTxt =
+          stmtRange.from || stmtRange.to
+            ? "Period: " +
+              (stmtRange.from || "beginning") +
+              "  " +
+              (stmtRange.to || "today")
+            : "Period: all transactions";
+        $("#modalBox").innerHTML = `${printBrandMarkup("Account statement")}
+  <h3>Statement  -  ${esc(p.name)}</h3>
+  <p class="sub">${p.type === "supplier" ? "Supplier" : "Customer"}  |  Opening balance: ${money(p.openingBalance)}  |  Current ${lbl}: <b>${money(Math.abs(partyBalance(p)))}</b>${partyBalance(p) < -0.005 ? " (advance)" : ""}<br>${rangeTxt}</p>
+  <div class="toolbar no-print">
+    <div><label style="margin:0">From</label><input type="date" id="stFrom" value="${stmtRange.from}" onchange="statement(${pid},this.value,document.getElementById('stTo').value)"></div>
+    <div><label style="margin:0">To</label><input type="date" id="stTo" value="${stmtRange.to}" onchange="statement(${pid},document.getElementById('stFrom').value,this.value)"></div>
+    <button class="btn ghost sm" onclick="printPOS()">POS print</button><button class="btn ghost sm" onclick="printA4Receipt()">A4 print</button>
+  </div>
+  <p class="print-only" style="font-size:.75rem">${esc(p.name)}  |  ${rangeTxt}</p>
+  <div style="overflow:auto;max-height:46vh"><table><thead><tr><th>Date</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Running Balance</th></tr></thead><tbody>
+  ${rows.map((e) => `<tr><td>${e.date}</td><td>${esc(e.note)}</td><td class="num">${e.dr ? money(e.dr) : " - "}</td><td class="num">${e.cr ? money(e.cr) : " - "}</td><td class="num"><b>${money(e.bal)}</b></td></tr>`).join("") || '<tr><td colspan="5" class="empty">No transactions in this period.</td></tr>'}
+  </tbody><tfoot><tr style="border-top:2px solid var(--border)"><td colspan="4"><b>Opening balance${stmtRange.from ? " (before " + stmtRange.from + ")" : ""}</b></td><td class="num"><b>${money(opening)}</b></td></tr>
+  <tr><td colspan="4"><b>Closing balance</b></td><td class="num"><b>${money(bal)}</b></td></tr></tfoot></table></div>
+  <div class="no-print" style="text-align:right;margin-top:12px">${isAdmin() ? `<button class="btn ghost" onclick="recordPayment(${pid})"> Record Payment</button>` : ""} <button class="btn" onclick="closeModal()">Close</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      let stmtRange = { from: "", to: "" };
+      function recordPayment(pid) {
+        if (!requireAdmin()) return;
+        const p = parties.find((x) => x.id === pid);
+        $("#modalBox").innerHTML = `<h3>Record Payment  -  ${esc(p.name)}</h3>
+  <p class="sub">Current balance: <b>${money(Math.abs(partyBalance(p)))}</b> ${p.type === "supplier" ? "we owe them" : "they owe us"}</p>
+  <div class="form-grid">
+   <div><label>Amount</label><input id="payAmt" type="number" step="0.01" min="0.01" style="width:100%"></div>
+   <div><label>Date</label><input id="payDate" type="date" value="${new Date().toISOString().slice(0, 10)}" style="width:100%"></div>
+   <div class="full"><label>Note</label><input id="payNote" placeholder="e.g. Cash payment" style="width:100%"></div>
+  </div>
+  <div style="text-align:right;margin-top:14px"><button class="btn ghost" onclick="closeModal()">Cancel</button> <button class="btn green" onclick="doPayment(${pid})"> Save Payment</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function doPayment(pid) {
+        if (!requireAdmin()) return;
+        const p = parties.find((x) => x.id === pid),
+          amt = fromCents(toCents($("#payAmt").value));
+        if (!amt || amt <= 0) {
+          toast("Enter a valid amount", true);
+          return;
+        }
+        postEntry({
+          date: $("#payDate").value || new Date().toISOString().slice(0, 10),
+          partyId: pid,
+          dr: p.type === "supplier" ? amt : 0,
+          cr: p.type === "supplier" ? 0 : amt,
+          note:
+            $("#payNote").value.trim() ||
+            (p.type === "supplier"
+              ? "Payment made to supplier"
+              : "Payment received"),
+        });
+        closeModal();
+        persist();
+        renderLedger();
+        toast("Payment recorded ");
+      }
+      function addParty() {
+        if (!requireAdmin()) return;
+        $("#modalBox").innerHTML = `<h3>Add Customer / Supplier</h3>
+  <div class="form-grid">
+   <div><label>Name</label><input id="pName" style="width:100%"></div>
+   <div><label>Type</label><select id="pType" style="width:100%"><option value="customer">Customer</option><option value="supplier">Supplier</option></select></div>
+   <div><label>Phone</label><input id="pPhone" style="width:100%"></div>
+   <div><label>Opening balance</label><input id="pOpen" type="number" step="0.01" value="0" style="width:100%"></div>
+  </div>
+  <p class="sub" style="margin-top:8px">For a customer: the amount they already owe. For a supplier: the amount already owed to them.</p>
+  <div style="text-align:right;margin-top:10px"><button class="btn ghost" onclick="closeModal()">Cancel</button> <button class="btn" onclick="saveParty()"> Save</button></div>`;
+        $("#modalWrap").classList.add("open");
+      }
+      function saveParty() {
+        if (!requireAdmin()) return;
+        const name = $("#pName").value.trim();
+        if (!name) {
+          toast("Name is required", true);
+          return;
+        }
+        parties.push({
+          id: nextPartyId(),
+          type: $("#pType").value,
+          name,
+          phone: $("#pPhone").value.trim(),
+          openingBalance: parseFloat($("#pOpen").value) || 0,
+        });
+        closeModal();
+        persist();
+        renderLedger();
+        toast("Account saved ");
+      }
+
+      /* ---------- Aging (FIFO: payments offset oldest charges first) ---------- */
+      function agingBuckets(p, today) {
+        today = today || new Date().toISOString().slice(0, 10);
+        const b = { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 };
+        const dir =
+          p.type === "supplier"
+            ? (e) => (e.cr || 0) - (e.dr || 0)
+            : (e) => (e.dr || 0) - (e.cr || 0);
+        const days = (d) =>
+          Math.floor((new Date(today) - new Date(d + "T00:00:00")) / 86400000);
+        const charges = [{ date: null, amt: p.openingBalance }].concat(
+          partyEntries(p)
+            .filter((e) => dir(e) > 0)
+            .map((e) => ({ date: e.date, amt: dir(e) })),
+        );
+        let credits = partyEntries(p).reduce(
+          (s, e) => s + Math.max(0, -dir(e)),
+          0,
+        );
+        for (const c of charges) {
+          let rem = c.amt;
+          const take = Math.min(rem, credits);
+          rem -= take;
+          credits -= take;
+          if (rem <= 0.005) continue;
+          const age = c.date === null ? 999 : days(c.date);
+          if (age <= 30) b["0-30"] += rem;
+          else if (age <= 60) b["31-60"] += rem;
+          else if (age <= 90) b["61-90"] += rem;
+          else b["90+"] += rem;
+        }
+        return b;
+      }
+      function renderAging() {
+        const today = new Date().toISOString().slice(0, 10);
+        const custs = parties.filter((p) => p.type === "customer");
+        const tot = { "0-30": 0, "31-60": 0, "61-90": 0, "90+": 0 };
+        const data = custs.map((p) => {
+          const b = agingBuckets(p, today);
+          ["0-30", "31-60", "61-90", "90+"].forEach((k) => (tot[k] += b[k]));
+          return { p, b, bal: partyBalance(p) };
+        });
+        $("#view-aging").innerHTML =
+          `<h2>Aged Receivables</h2><div class="sub">Outstanding customer balances by invoice age (FIFO  -  payments clear oldest charges first). As of ${today}.</div>
+  <div class="panel" style="overflow:auto"><table><thead><tr><th>Customer</th><th class="num">Total Owed</th><th class="num">0-30 days</th><th class="num">31-60 days</th><th class="num">61-90 days</th><th class="num">90+ days</th><th></th></tr></thead><tbody>
+  ${data.map(({ p, b, bal }) => `<tr><td><b>${esc(p.name)}</b></td><td class="num"><b>${money(bal)}</b></td><td class="num">${b["0-30"] ? money(b["0-30"]) : " - "}</td><td class="num">${b["31-60"] ? money(b["31-60"]) : " - "}</td><td class="num">${b["61-90"] ? money(b["61-90"]) : " - "}</td><td class="num">${b["90+"] ? money(b["90+"]) : " - "}</td><td><button class="btn sm ghost" onclick="statement(${p.id})"> Statement</button></td></tr>`).join("") || '<tr><td colspan="7" class="empty">No customer accounts.</td></tr>'}
+  </tbody><tfoot><tr style="border-top:2px solid var(--border)"><td><b>TOTAL</b></td><td class="num"><b>${money(tot["0-30"] + tot["31-60"] + tot["61-90"] + tot["90+"])}</b></td><td class="num"><b>${money(tot["0-30"])}</b></td><td class="num"><b>${money(tot["31-60"])}</b></td><td class="num"><b>${money(tot["61-90"])}</b></td><td class="num"><b>${money(tot["90+"])}</b></td><td></td></tr></tfoot></table></div>
+  <div class="toolbar no-print"><button class="btn ghost" onclick="printPOS()">POS print Report</button><button class="btn ghost" onclick="exportAgingCSV()"> Export CSV</button></div>`;
+      }
+      function exportAgingCSV() {
+        const today = new Date().toISOString().slice(0, 10);
+        const rows = [
+          [
+            "Customer",
+            "Total Owed (USD)",
+            "0-30 days",
+            "31-60 days",
+            "61-90 days",
+            "90+ days",
+          ],
+        ];
+        let t = [0, 0, 0, 0];
+        parties
+          .filter((p) => p.type === "customer")
+          .forEach((p) => {
+            const b = agingBuckets(p, today);
+            t[0] += b["0-30"];
+            t[1] += b["31-60"];
+            t[2] += b["61-90"];
+            t[3] += b["90+"];
+            rows.push([
+              p.name,
+              partyBalance(p).toFixed(2),
+              b["0-30"].toFixed(2),
+              b["31-60"].toFixed(2),
+              b["61-90"].toFixed(2),
+              b["90+"].toFixed(2),
+            ]);
+          });
+        rows.push([
+          "TOTAL",
+          "",
+          t[0].toFixed(2),
+          t[1].toFixed(2),
+          t[2].toFixed(2),
+          t[3].toFixed(2),
+        ]);
+        dl(
+          "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+          "Darko_Aged_Receivables_" + today + ".csv",
+          "text/csv",
+        );
+        toast("Aging CSV downloaded ");
+      }
+      function exportBalancesCSV() {
+        const rows = [
+          [
+            "Account",
+            "Type",
+            "Phone",
+            "Opening Balance (USD)",
+            "Current Balance (USD)",
+            "Direction",
+          ],
+        ];
+        parties.forEach((p) => {
+          const b = partyBalance(p);
+          rows.push([
+            p.name,
+            p.type,
+            p.phone || "",
+            p.openingBalance.toFixed(2),
+            Math.abs(b).toFixed(2),
+            b > 0.005
+              ? p.type === "supplier"
+                ? "We owe supplier"
+                : "Customer owes us"
+              : b < -0.005
+                ? "Advance"
+                : "Settled",
+          ]);
+        });
+        const recv = parties
+          .filter((p) => p.type === "customer")
+          .reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
+        const payb = parties
+          .filter((p) => p.type === "supplier")
+          .reduce((s, p) => s + Math.max(0, partyBalance(p)), 0);
+        rows.push(["TOTAL RECEIVABLE", "", "", "", "", recv.toFixed(2)]);
+        rows.push(["TOTAL PAYABLE", "", "", "", "", payb.toFixed(2)]);
+        dl(
+          "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+          "Darko_Outstanding_Balances_" +
+            new Date().toISOString().slice(0, 10) +
+            ".csv",
+          "text/csv",
+        );
+        toast("Balances CSV downloaded ");
+      }
+
+      /* ---------- Alerts ---------- */
+      function renderAlerts() {
+        const low = products.filter((p) => status(p) === "low"),
+          out = products.filter((p) => status(p) === "out");
+        const expSoon = products.filter((p) => {
+          const d = daysToSafe(p.expiry);
+          return d !== null && d >= 0 && d <= settings.expiryDays;
+        });
+        const expired = products.filter((p) => {
+          const d = daysToSafe(p.expiry);
+          return d !== null && d < 0;
+        });
+        const rows = (a) =>
+          a
+            .map(
+              (p) =>
+                `<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.sku)}</td><td><b>${p.qty} ${esc(p.unit)}</b></td><td>${p.expiry || " - "}</td></tr>`,
+            )
+            .join("");
+        $("#view-alerts").innerHTML =
+          `<h2>Alerts</h2><div class="sub">Low stock (<= ${settings.lowStock}) and expiry warnings (<= ${settings.expiryDays} days).</div>
+  <div class="panel"><h3> Out of Stock (${out.length})</h3>${out.length ? `<table><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Expiry</th></tr></thead><tbody>${rows(out)}</tbody></table>` : '<div class="empty">None </div>'}</div>
+  <div class="panel"><h3>  Low Stock (${low.length})</h3>${low.length ? `<table><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Expiry</th></tr></thead><tbody>${rows(low)}</tbody></table>` : '<div class="empty">None </div>'}</div>
+  <div class="panel"><h3> Expiring Soon (${expSoon.length})</h3>${expSoon.length ? `<table><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Expiry</th></tr></thead><tbody>${rows(expSoon)}</tbody></table>` : '<div class="empty">None </div>'}</div>
+  <div class="panel"><h3> </h3>${expired.length ? `<table><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Expiry</th></tr></thead><tbody>${rows(expired)}</tbody></table>` : '<div class="empty">None </div>'}</div>`;
+      }
+
+      /* ---------- Settings ---------- */
+      function renderSettings() {
+        if (!isAdmin()) {
+          $("#view-settings").innerHTML =
+            '<div class="panel"><h3> Access denied</h3><p class="sub">Settings are restricted to administrators. Please contact your admin.</p></div>';
+          return;
+        }
+        const users = loadUsers();
+        $("#view-settings").innerHTML =
+          `<h2>Settings &amp; Data</h2><div class="sub">Records are stored in this browser's local IndexedDB database. The app login is a client-side access screen; it does not encrypt local database records.</div><div class="settings-note" id="databaseStatus">${databaseReady ? "IndexedDB connected · local persistent database" : "Connecting to local database…"}</div>
+  <div class="panel"><h3>Preferences</h3><div class="form-grid">
+    <div><label>Currency symbol</label><input id="sCur" value="${esc(settings.currency)}" style="width:100%"></div><div><label>LRD per 1 USD rate</label><input id="sRate" type="number" min="0.0001" step="0.01" value="${Number(settings.lrdRate || 190)}" style="width:100%"></div>
+    <div><label>Low-stock threshold (units)</label><input id="sLow" type="number" min="1" value="${settings.lowStock}" style="width:100%"></div>
+    <div><label>Expiry warning (days ahead)</label><input id="sExp" type="number" min="1" value="${settings.expiryDays}" style="width:100%"></div><div><label>System name</label><input id="sAppName" value="${esc(settings.appName || "Darko Pharma IMS")}" style="width:100%"></div><div><label>Business name on receipts</label><input id="sBiz" value="${esc(settings.businessName || "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES")}" style="width:100%"></div><div><label>Logo image</label><input id="sLogo" type="file" accept="image/*" style="width:100%"></div><div><label>Background image</label><input id="sBg" type="file" accept="image/*" style="width:100%"><small>${settings.background ? "Custom background active" : "Default medicine background active"}</small> <button class="btn sm ghost" type="button" onclick="resetBackground()">Restore default medicine background</button></div><div><label>Login dashboard logo</label><input id="sLoginLogo" type="file" accept="image/*" style="width:100%"><small>${settings.loginLogo ? "Custom login logo active" : settings.logo ? "Using system logo" : "Default D logo active"}</small></div><div><label>Login dashboard background</label><input id="sLoginBg" type="file" accept="image/*" style="width:100%"><small>${settings.loginBackground ? "Custom login background active" : "Default medicine login image active"}</small> <button class="btn sm ghost" type="button" onclick="resetLoginBranding()">Restore default login design</button></div>
+  </div><div style="text-align:right;margin-top:12px"><button class="btn" onclick="saveSettings()"> Save Preferences</button></div></div>
+  <div class="panel"><h3>User Accounts (Admin)</h3><div class="settings-note">Passwords are stored as salted PBKDF2 hashes. Login throttles repeated failures and sessions expire after 30 minutes idle. The database is local to this browser; this app cannot prevent someone with access to this computer or browser developer tools from reading or changing local data.</div>
+    <table><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr></thead><tbody>
+    ${users
+      .map(
+        (
+          u,
+          i,
+        ) => `<tr><td><code>${esc(u.u)}</code></td><td>${esc(u.name || "")}</td><td><span class="badge ${u.role === "admin" ? "b-cat" : "b-ok"}">${u.role === "admin" ? "Administrator" : "Cashier"}</span></td>
+    <td><button class="btn sm ghost" onclick="renameUser(${i})">Change Username</button> <button class="btn sm ghost" onclick="resetPw(${i})">Reset Password</button> ${u.u.toLowerCase() === "admin" ? "" : '<button class="btn sm danger" onclick="delUser(' + i + ')">Delete</button>'}</td></tr>`,
+      )
+      .join("")}
+    </tbody></table>
+    <div class="toolbar" style="margin-top:12px"><input id="nuUser" placeholder="new username" style="width:150px"><input id="nuPass" placeholder="password" style="width:150px"><select id="nuRole"><option value="cashier">Cashier</option><option value="admin">Administrator</option></select><button class="btn sm" onclick="addUser()"> Add User</button></div>
+  </div>
+  <div class="panel"><h3>Data Tools</h3>
+    <div class="toolbar">
+      <button class="btn ghost" onclick="exportCSV()">Export Inventory CSV</button><button class="btn ghost" onclick="document.getElementById('bulkFile').click()">Bulk Upload CSV</button><input id="bulkFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importInventoryCSV(this)"><button class="btn ghost" onclick="printInventoryA4()">Print Inventory A4</button>
+      <button class="btn ghost" onclick="exportSalesCSV()"> Export Sales CSV</button>
+          <button class="btn ghost" onclick="backupJSON()">Full Backup / Extract (JSON)</button><button class="btn ghost" onclick="document.getElementById('restoreFile').click()">Restore Full Backup (JSON)</button><input id="restoreFile" type="file" accept=".json,application/json" style="display:none" onchange="restoreJSON(this)">
+      <button class="btn ghost" onclick="exportDataCSV()"> Full Data Extract (CSV)</button><button class="btn ghost" onclick="exportCSS()">Export CSS Feature</button><button class="btn ghost" onclick="installApp()">Install POS App</button>
+      <button class="btn warn" onclick="resetData()"> Reset to PDF seed data</button>
+    </div>
+    <div class="settings-note">
+      <b>Storage and hosting:</b> this installable app works on static hosts such as Vercel and remains available offline on this device. Each browser profile has its own database. Shared, live records across devices require a hosted database and secure API/backend; a static HTML file cannot create that service or safely store private credentials. Use Full Backup / Extract and Restore Full Backup to move all records between installations. Install over HTTPS in a supported browser; add the POS printer in the operating system, then select its driver and paper size in the browser print dialog. POS receipts use 80 mm paper by default; A4 uses standard A4 layout.
+    </div>
+  </div>`;
+      }
+      async function addUser() {
+        if (!requireAdmin()) return;
+        const u = $("#nuUser").value.trim(),
+          p = $("#nuPass").value,
+          role = $("#nuRole").value;
+        if (!u || p.length < 12) {
+          toast(
+            "Username and a password of at least 12 characters required",
+            true,
+          );
+          return;
+        }
+        const users = loadUsers();
+        if (users.find((x) => x.u.toLowerCase() === u.toLowerCase())) {
+          toast("Username already exists", true);
+          return;
+        }
+        users.push({
+          u,
+          p: await hashPassword(p),
+          role,
+          name: u.charAt(0).toUpperCase() + u.slice(1),
+        });
+        saveUsers(users);
+        renderSettings();
+        toast("User added ");
+      }
+      async function resetPw(i) {
+        if (!requireAdmin()) return;
+        const users = loadUsers();
+        const np = prompt("New password for " + users[i].u + ":");
+        if (!np || np.length < 12) {
+          if (np !== null)
+            toast("Password must be at least 12 characters", true);
+          return;
+        }
+        users[i].p = await hashPassword(np);
+        saveUsers(users);
+        toast("Password updated ");
+      }
+      function renameUser(i) {
+        if (!requireAdmin()) return;
+        const users = loadUsers(),
+          account = users[i];
+        if (!account) return;
+        const next = prompt("New username for " + account.u + ":", account.u);
+        if (next === null) return;
+        const username = next.trim();
+        if (!/^[a-zA-Z0-9._-]{3,32}$/.test(username)) {
+          toast(
+            "Use 3–32 letters, numbers, dots, underscores or hyphens",
+            true,
+          );
+          return;
+        }
+        if (
+          users.some(
+            (u, index) =>
+              index !== i && u.u.toLowerCase() === username.toLowerCase(),
+          )
+        ) {
+          toast("Username already exists", true);
+          return;
+        }
+        const oldName = account.u;
+        account.u = username;
+        users[i] = account;
+        saveUsers(users);
+        if (currentUser === oldName) {
+          currentUser = username;
+          sessionStorage.setItem(
+            "darko_session",
+            JSON.stringify({ u: username }),
+          );
+          applyRole();
+        }
+        renderSettings();
+        toast("Username updated");
+      }
+      function resetBackground() {
+        if (!requireAdmin()) return;
+        settings.background = "";
+        persist();
+        applyBranding();
+        renderSettings();
+        toast("Default medicine background restored");
+      }
+      function resetLoginBranding() {
+        if (!requireAdmin()) return;
+        settings.loginBackground = "";
+        settings.loginLogo = "";
+        persist();
+        applyBranding();
+        renderSettings();
+        toast("Default login design restored");
+      }
+      function delUser(i) {
+        if (!requireAdmin()) return;
+        const users = loadUsers();
+        if (
+          users[i]?.role === "admin" &&
+          users.filter((x) => x.role === "admin").length <= 1
+        ) {
+          toast("At least one administrator account must remain", true);
+          return;
+        }
+        if (users[i]?.u === currentUser) {
+          toast("You cannot delete the account you are using", true);
+          return;
+        }
+        if (confirm("Delete user " + users[i].u + "?")) {
+          users.splice(i, 1);
+          saveUsers(users);
+          renderSettings();
+          toast("User deleted");
+        }
+      }
+      function saveSettings() {
+        settings.currency = $("#sCur").value.trim() || "USD";
+        const rate = Number($("#sRate").value);
+        if (!Number.isFinite(rate) || rate <= 0) {
+          toast("Exchange rate must be greater than zero", true);
+          return;
+        }
+        settings.lrdRate = rate;
+        settings.lowStock = Math.max(1, parseInt($("#sLow").value) || 5);
+        settings.expiryDays = Math.max(1, parseInt($("#sExp").value) || 90);
+        settings.appName = $("#sAppName").value.trim() || "Darko Pharma IMS";
+        settings.businessName =
+          $("#sBiz").value.trim() || "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES";
+        const readImage = (input) =>
+          new Promise((resolve, reject) => {
+            const file = input.files && input.files[0];
+            if (!file) return resolve(null);
+            if (file.size > 1500000)
+              return reject(new Error("Images must be under 1.5 MB"));
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error("Could not read image"));
+            reader.readAsDataURL(file);
+          });
+        Promise.all([
+          readImage($("#sLogo")),
+          readImage($("#sBg")),
+          readImage($("#sLoginLogo")),
+          readImage($("#sLoginBg")),
+        ])
+          .then(([logo, bg, loginLogo, loginBg]) => {
+            if (logo) settings.logo = logo;
+            if (bg) settings.background = bg;
+            if (loginLogo) settings.loginLogo = loginLogo;
+            if (loginBg) settings.loginBackground = loginBg;
+            persist();
+            applyBranding();
+            toast("Preferences saved");
+            renderAll();
+          })
+          .catch((e) => toast(e.message, true));
+      }
+      function resetData() {
+        if (
+          !confirm(
+            "Reset inventory to the original 86 products from the PDF and clear all sales?",
+          )
+        )
+          return;
+        localStorage.removeItem(K_PROD);
+        localStorage.removeItem(K_SALES);
+        localStorage.removeItem(K_PARTY);
+        localStorage.removeItem(K_LEDGER);
+        cart = [];
+        load();
+        applyBranding();
+        persist();
+        renderAll();
+        toast("System reset to seed data ");
+      }
+      function backupJSON() {
+        dl(
+          JSON.stringify(
+            {
+              schemaVersion: 1,
+              products,
+              sales,
+              parties,
+              ledger,
+              users: loadUsers(),
+              settings,
+              exported: new Date().toISOString(),
+            },
+            null,
+            2,
+          ),
+          "darko_ims_full_extract.json",
+          "application/json",
+        );
+      }
+      function restoreJSON(input) {
+        if (!requireAdmin()) {
+          input.value = "";
+          return;
+        }
+        const file = input.files && input.files[0];
+        if (!file) return;
+        if (file.size > 25000000) {
+          toast("Backup file must be under 25 MB", true);
+          input.value = "";
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(String(reader.result));
+            const arrays = ["products", "sales", "parties", "ledger", "users"];
+            if (
+              !data ||
+              !arrays.every((key) => Array.isArray(data[key])) ||
+              !data.settings ||
+              typeof data.settings !== "object"
+            )
+              throw new Error("This file is not a complete Darko IMS backup.");
+            if (
+              data.products.some(
+                (p) =>
+                  !p ||
+                  !Number.isFinite(Number(p.id)) ||
+                  !String(p.name || "").trim() ||
+                  !Number.isFinite(Number(p.qty)) ||
+                  !Number.isFinite(Number(p.price)),
+              )
+            )
+              throw new Error(
+                "Backup contains invalid product records; current data was not changed.",
+              );
+            if (
+              data.sales.some(
+                (s) =>
+                  !s ||
+                  !Number.isFinite(Number(s.no)) ||
+                  !Array.isArray(s.items),
+              )
+            )
+              throw new Error(
+                "Backup contains invalid sales records; current data was not changed.",
+              );
+            if (!data.users.some((u) => u && u.role === "admin" && u.p))
+              throw new Error(
+                "Backup must contain at least one administrator account.",
+              );
+            if (
+              !data.users.some(
+                (u) => u && u.u === currentUser && u.role === "admin",
+              )
+            )
+              throw new Error(
+                "Backup must include the administrator account currently signed in, to prevent locking this installation.",
+              );
+            if (
+              !confirm(
+                `Replace this browser database with the backup from ${data.exported || "an unknown date"}? Export a backup of the current data first if you may need it.`,
+              )
+            )
+              return;
+            products = data.products;
+            sales = data.sales;
+            parties = data.parties;
+            ledger = data.ledger;
+            settings = { ...settings, ...data.settings };
+            saveUsers(data.users);
+            cart = [];
+            persist();
+            applyBranding();
+            renderAll();
+            toast("Full database backup restored");
+          } catch (error) {
+            toast(error.message || "Could not restore backup", true);
+          } finally {
+            input.value = "";
+          }
+        };
+        reader.onerror = () => {
+          toast("Could not read backup file", true);
+          input.value = "";
+        };
+        reader.readAsText(file);
+      }
+      function exportCSS() {
+        const css = [...document.querySelectorAll("style")]
+          .map((el) => el.textContent)
+          .join("\n\n");
+        dl(css, "Darko_IMS_Styles.css", "text/css");
+        toast("CSS feature exported");
+      }
+      function dl(data, fn, mime) {
+        const a = document.createElement("a"),
+          url = URL.createObjectURL(new Blob([data], { type: mime }));
+        a.href = url;
+        a.download = fn;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function csvCell(v) {
+        v = String(v ?? "");
+        return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }
+      function exportCSV() {
+        const rows = [
+          [
+            "SKU",
+            "Product",
+            "Category",
+            "Unit",
+            "Quantity",
+            "Unit Price (USD)",
+            "Stock Value (USD)",
+            "Expiry Date",
+            "Status",
+          ],
+        ];
+        products.forEach((p) =>
+          rows.push([
+            p.sku,
+            p.name,
+            p.cat,
+            p.unit,
+            p.qty,
+            p.price.toFixed(2),
+            (p.qty * p.price).toFixed(2),
+            p.expiry || "",
+            status(p) === "ok"
+              ? "In stock"
+              : status(p) === "low"
+                ? "Low stock"
+                : "Out of stock",
+          ]),
+        );
+        rows.push([
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "TOTAL " +
+            products.reduce((s, p) => s + p.qty * p.price, 0).toFixed(2),
+          "",
+          "",
+        ]);
+        dl(
+          "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+          "Darko_Inventory_" + new Date().toISOString().slice(0, 10) + ".csv",
+          "text/csv",
+        );
+        toast("Inventory CSV downloaded ");
+      }
+      function parseCSV(text) {
+        const rows = [];
+        let row = [],
+          cell = "",
+          quoted = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (quoted) {
+            if (c === '"' && text[i + 1] === '"') {
+              cell += '"';
+              i++;
+            } else if (c === '"') quoted = false;
+            else cell += c;
+          } else if (c === '"') quoted = true;
+          else if (c === ",") {
+            row.push(cell);
+            cell = "";
+          } else if (c === "\n") {
+            row.push(cell.replace(/\r$/, ""));
+            rows.push(row);
+            row = [];
+            cell = "";
+          } else cell += c;
+        }
+        if (cell.length || row.length) {
+          row.push(cell.replace(/\r$/, ""));
+          rows.push(row);
+        }
+        return rows;
+      }
+      function importInventoryCSV(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const rows = parseCSV(String(reader.result).replace(/^\uFEFF/, ""));
+            if (rows.length < 2) throw Error("CSV has no product rows");
+            const norm = (s) =>
+              String(s || "")
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, "");
+            const header = rows[0].map(norm);
+            const col = (names) => header.findIndex((h) => names.includes(h));
+            const ix = {
+              sku: col(["sku", "productcode"]),
+              name: col(["product", "name", "productname"]),
+              cat: col(["category", "cat"]),
+              unit: col(["unit", "uom"]),
+              qty: col(["quantity", "qty", "stock"]),
+              price: col(["unitpriceusd", "price", "unitprice", "cost"]),
+              expiry: col(["expirydate", "expiry"]),
+            };
+            if (ix.name < 0 || ix.qty < 0 || ix.price < 0)
+              throw Error(
+                "Required columns: Product/Name, Quantity, Unit Price (USD). SKU, Category, Unit and Expiry Date are optional.",
+              );
+            let valid = [],
+              errors = [];
+            rows.slice(1).forEach((r, n) => {
+              if (!r.some((x) => String(x).trim())) return;
+              const name = String(r[ix.name] || "").trim(),
+                qty = Number(r[ix.qty]),
+                price = Number(r[ix.price]);
+              if (
+                !name ||
+                !Number.isFinite(qty) ||
+                qty < 0 ||
+                !Number.isFinite(price) ||
+                price < 0
+              ) {
+                errors.push(n + 2);
+                return;
+              }
+              valid.push({
+                sku: ix.sku >= 0 ? String(r[ix.sku] || "").trim() : "",
+                name,
+                cat: ix.cat >= 0 ? String(r[ix.cat] || "").trim() : "Other",
+                unit: ix.unit >= 0 ? String(r[ix.unit] || "").trim() : "Pcs",
+                qty,
+                price,
+                expiry: ix.expiry >= 0 ? String(r[ix.expiry] || "").trim() : "",
+              });
+            });
+            if (!valid.length) throw Error("No valid products found");
+            if (
+              !confirm(
+                `Import ${valid.length} valid products${errors.length ? `; skip ${errors.length} invalid rows` : ""}? Matching SKUs will update existing product records.`,
+              )
+            )
+              return;
+            let added = 0,
+              updated = 0;
+            valid.forEach((v) => {
+              let p = v.sku
+                ? products.find(
+                    (x) => x.sku.toLowerCase() === v.sku.toLowerCase(),
+                  )
+                : null;
+              if (p) {
+                Object.assign(p, v);
+                updated++;
+              } else {
+                const id =
+                  Math.max(0, ...products.map((x) => Number(x.id) || 0)) + 1;
+                products.push({
+                  id,
+                  sku: v.sku || "DK-" + String(id).padStart(3, "0"),
+                  ...v,
+                });
+                added++;
+              }
+            });
+            persist();
+            renderAll();
+            toast(
+              `Imported ${added} new, updated ${updated}${errors.length ? `; skipped ${errors.length}` : ""}`,
+            );
+          } catch (e) {
+            toast(e.message || "Could not import CSV", true);
+          } finally {
+            input.value = "";
+          }
+        };
+        reader.readAsText(file);
+      }
+      function printInventoryA4() {
+        const view = $("#view-inv"),
+          active = view.classList.contains("active"),
+          previous = document.querySelector(".view.active");
+        if (!active) {
+          document
+            .querySelectorAll(".view")
+            .forEach((v) => v.classList.remove("active"));
+          view.classList.add("active");
+        }
+        renderInv();
+        const cleanup = () => {
+          document.body.classList.remove("print-a4");
+          window.removeEventListener("afterprint", cleanup);
+          if (!active) {
+            view.classList.remove("active");
+            if (previous) previous.classList.add("active");
+          }
+        };
+        window.addEventListener("afterprint", cleanup, { once: true });
+        document.body.classList.add("print-a4");
+        requestAnimationFrame(() => setTimeout(() => window.print(), 80));
+        setTimeout(cleanup, 120000);
+      }
+      function exportSalesCSV() {
+        const rows = [
+          [
+            "Receipt",
+            "Date",
+            "Customer",
+            "Payment",
+            "Product",
+            "Quantity",
+            "Unit Price (USD)",
+            "Line Total (USD)",
+            "Sale Total (USD)",
+          ],
+        ];
+        sales.forEach((s) =>
+          s.items.forEach((i) =>
+            rows.push([
+              s.no,
+              new Date(s.date).toLocaleString(),
+              s.customer || "Walk-in",
+              s.payment || "Cash",
+              i.name,
+              i.qty,
+              i.price.toFixed(2),
+              (i.qty * i.price).toFixed(2),
+              s.total.toFixed(2),
+            ]),
+          ),
+        );
+        dl(
+          "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+          "Darko_Sales_" + new Date().toISOString().slice(0, 10) + ".csv",
+          "text/csv",
+        );
+        toast("Sales CSV downloaded ");
+      }
+      function exportDataCSV() {
+        const rows = [
+          [
+            "Record Type",
+            "ID",
+            "Date",
+            "Name",
+            "SKU",
+            "Category",
+            "Unit",
+            "Quantity",
+            "Unit Price USD",
+            "Total USD",
+            "Currency",
+            "Payment",
+            "Customer",
+            "Expiry",
+            "Details",
+          ],
+        ];
+        products.forEach((p) =>
+          rows.push([
+            "Product",
+            p.id,
+            "",
+            p.name,
+            p.sku,
+            p.cat,
+            p.unit,
+            p.qty,
+            p.price,
+            (p.qty * p.price).toFixed(2),
+            "",
+            "",
+            "",
+            p.expiry || "",
+            "",
+          ]),
+        );
+        sales.forEach((s) =>
+          s.items.forEach((i) =>
+            rows.push([
+              "Sale",
+              s.no,
+              new Date(s.date).toISOString(),
+              i.name,
+              i.sku || "",
+              "",
+              i.unit || "",
+              i.qty,
+              i.price,
+              (i.price * i.qty).toFixed(2),
+              s.currency || "USD",
+              s.payment || "",
+              s.customer || "",
+              "",
+              "Exchange rate: " + (s.exchangeRate || ""),
+            ]),
+          ),
+        );
+        parties.forEach((p) =>
+          rows.push([
+            "Account",
+            p.id,
+            "",
+            p.name,
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            p.type || "",
+            "",
+            "Phone: " +
+              (p.phone || "") +
+              "; Opening balance: " +
+              (p.opening || 0),
+          ]),
+        );
+        ledger.forEach((e) =>
+          rows.push([
+            "Ledger",
+            e.id,
+            e.date || "",
+            e.note || "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            parties.find((p) => p.id === e.partyId)?.name || "",
+            "",
+            `Debit ${e.dr || 0}; Credit ${e.cr || 0}`,
+          ]),
+        );
+        dl(
+          "\uFEFF" + rows.map((r) => r.map(csvCell).join(",")).join("\n"),
+          "Darko_Full_Data_Extract_" +
+            new Date().toISOString().slice(0, 10) +
+            ".csv",
+          "text/csv",
+        );
+        toast("Full data extract downloaded");
+      }
+
+      /* ---------- Clock & boot ---------- */
+      window.addEventListener("storage", (e) => {
+        if ([K_PROD, K_SALES, K_SET, K_PARTY, K_LEDGER].includes(e.key)) {
+          load();
+          applyBranding();
+          renderAll();
+        }
+      });
+      ["pointerdown", "keydown", "touchstart"].forEach((eventName) =>
+        window.addEventListener(eventName, markSessionActivity, {
+          passive: true,
+        }),
+      );
+      setInterval(expireSessionIfIdle, 15000);
+      setInterval(() => {
+        const a = document.querySelector("nav.tabs button.active");
+        if (a && ["dash", "finance"].includes(a.dataset.v))
+          ({ dash: renderDash, finance: renderFinance })[a.dataset.v]();
+      }, 1000);
+      function tick() {
+        const n = new Date();
+        $("#clock").textContent =
+          n.toLocaleDateString(undefined, {
+            weekday: "short",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }) +
+          "  |  " +
+          n.toLocaleTimeString();
+      }
+      setInterval(tick, 1000);
+      tick();
+      load();
+      /* boot: session restore  login gate  deep-link */
+      if (
+        "serviceWorker" in navigator &&
+        (location.protocol === "https:" ||
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1")
+      ) {
+        window.addEventListener("load", () =>
+          navigator.serviceWorker
+            .register("./darko-ims-sw.js")
+            .catch((error) =>
+              console.warn("Offline installation is unavailable", error),
+            ),
+        );
+      }
+      (function () {
+        try {
+          const s = JSON.parse(sessionStorage.getItem("darko_session"));
+          const account = s && loadUsers().find((x) => x.u === s.u);
+          if (account) {
+            currentRole = account.role;
+            currentUser = account.u;
+            if (
+              Date.now() -
+                Number(sessionStorage.getItem("darko_last_activity") || 0) >
+              SESSION_TIMEOUT_MS
+            ) {
+              logout();
+              return;
+            }
+            $("#loginWrap").style.display = "none";
+            applyRole();
+          } else sessionStorage.removeItem("darko_session");
+        } catch (e) {}
+        if (!currentRole) $("#loginWrap").style.display = "flex";
+        restoreSidebarPreference();
+        applyBranding();
+        renderAll();
+        const h = location.hash.slice(1);
+        if (h && document.getElementById("view-" + h) && currentRole) {
+          document
+            .querySelectorAll("nav.tabs button")
+            .forEach((x) => x.classList.toggle("active", x.dataset.v === h));
+          document
+            .querySelectorAll(".view")
+            .forEach((v) => v.classList.remove("active"));
+          $("#view-" + h).classList.add("active");
+          renderAll();
+        }
+      })();
+      initializeDatabase();
+    </script>
+    <script
+      type="module"
+      src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092"
+      integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw=="
+      data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","spa":2}'
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
