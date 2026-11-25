@@ -1,9 +1,9 @@
 {
-  "id": "./Darko_Inventory_System_v3.html",
+  "id": "./index.html",
   "name": "Darko Pharma Inventory System",
   "short_name": "Darko IMS",
   "description": "Pharmacy inventory and point of sale",
-  "start_url": "./Darko_Inventory_System_v3.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f1f5f9",

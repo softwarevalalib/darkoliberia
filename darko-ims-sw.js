@@ -1,5 +1,5 @@
-const CACHE_NAME = "darko-ims-shell-v1";
-const APP_URL = "./Darko_Inventory_System_v3.html";
+const CACHE_NAME = "darko-ims-shell-v2";
+const APP_URL = "./index.html";
 const SHELL = [APP_URL, "./darko-ims.webmanifest", "./darko-ims-icon.svg", "./darko-ims-icon-192.png", "./darko-ims-icon-512.png", "./apple-touch-icon-180.png"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));

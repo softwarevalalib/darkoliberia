@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: darko_ims
+      POSTGRES_USER: darko
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+    volumes:
+      - darko_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U darko -d darko_ims"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  api:
+    build: ./server
+    restart: unless-stopped
+    env_file: ./server/.env
+    environment:
+      DATABASE_URL: postgresql://darko:${POSTGRES_PASSWORD}@postgres:5432/darko_ims?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+volumes:
+  darko_pgdata:

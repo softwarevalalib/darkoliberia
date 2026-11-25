@@ -884,6 +884,14 @@
         >
           Sales &amp; Inventory Management | Sign in
         </p>
+        <label for="loginApiBase">Shared database server URL (optional)</label>
+        <input
+          id="loginApiBase"
+          type="url"
+          placeholder="https://your-api.example"
+          style="width: 100%; margin-bottom: 10px"
+          onblur="setApiBase(this.value)"
+        />
         <label>Username</label
         ><input
           id="loginUser"
@@ -1325,6 +1333,12 @@
         },
       ];
       function loadUsers() {
+        if (cloudToken && Array.isArray(cloudUsers))
+          return cloudUsers.map((user) => ({
+            ...user,
+            u: user.username,
+            name: user.username,
+          }));
         try {
           const u = JSON.parse(localStorage.getItem(K_USERS));
           return u && u.length ? u : SEED_USERS;
@@ -1349,6 +1363,81 @@
       async function attemptLogin() {
         const u = $("#loginUser").value.trim(),
           p = $("#loginPass").value;
+        if (apiBase()) {
+          try {
+            const auth = await apiRequest(
+              "/auth/login",
+              {
+                method: "POST",
+                body: JSON.stringify({ username: u, password: p }),
+              },
+              false,
+            );
+            cloudToken = auth.accessToken;
+            sessionStorage.setItem("darko_api_token", cloudToken);
+            currentRole = auth.user.role;
+            currentUser = auth.user.username;
+            sessionStorage.setItem(
+              "darko_session",
+              JSON.stringify({
+                u: currentUser,
+                role: currentRole,
+                remote: true,
+              }),
+            );
+            markSessionActivity();
+            clearFailedLogins();
+            $("#loginWrap").style.display = "none";
+            applyRole();
+            const workspace = await pullSharedWorkspace(false);
+            if (workspace.data && localDatabaseHadData && isAdmin()) {
+              if (
+                confirm(
+                  'This browser also has saved local records. Replace the shared workspace with them? Choose Cancel to keep the existing shared records on this device.',
+                )
+              ) {
+                cloudVersion = workspace.version;
+                await pushSharedWorkspace(true);
+              } else {
+                await pullSharedWorkspace(false);
+              }
+            }
+            if (isAdmin()) await refreshCloudUsers();
+            startCloudPolling();
+            renderAll();
+            if (!workspace.data) {
+              toast(
+                isAdmin()
+                  ? "Signed in. Import or initialize the shared database in Settings."
+                  : "Signed in. Waiting for the administrator to initialize shared data.",
+              );
+            } else toast("Shared inventory loaded for " + currentUser);
+            return;
+          } catch (error) {
+            if (error.status) {
+              if (error.status >= 500) {
+                cloudToken = "";
+                sessionStorage.removeItem("darko_api_token");
+                toast(
+                  "Shared server is unavailable; signing in to this browser's offline data",
+                  true,
+                );
+              } else {
+              noteFailedLogin();
+              $("#loginErr").textContent =
+                error.message || "Server sign-in failed";
+              return;
+              }
+            } else {
+              cloudToken = "";
+              sessionStorage.removeItem("darko_api_token");
+              toast(
+                "Shared server is unreachable; signing in to this browser's offline data",
+                true,
+              );
+            }
+          }
+        }
         const throttle = loginThrottle();
         if (throttle.until > Date.now()) {
           $("#loginErr").textContent =
@@ -1401,6 +1490,13 @@
         toast("Welcome, " + found.name + " ");
       }
       function logout() {
+        clearInterval(cloudPolling);
+        clearTimeout(cloudSaveTimer);
+        cloudToken = "";
+        cloudVersion = null;
+        cloudReady = false;
+        cloudDirty = false;
+        sessionStorage.removeItem("darko_api_token");
         sessionStorage.removeItem("darko_session");
         sessionStorage.removeItem("darko_last_activity");
         currentRole = null;
@@ -1437,6 +1533,7 @@
           background: "",
           loginLogo: "",
           loginBackground: "",
+          apiUrl: "",
           businessName: "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES",
           appName: "Darko Pharma IMS",
         },
@@ -1447,6 +1544,16 @@
         ledger = [],
         currentRole = null,
         currentUser = null;
+      let cloudToken = sessionStorage.getItem("darko_api_token") || "",
+        cloudVersion = null,
+        cloudReady = false,
+        cloudDirty = false,
+        localDatabaseHadData = false,
+        cloudPolling = null,
+        cloudSaveTimer = null,
+        cloudHydrating = false,
+        restoreCloudSession = false,
+        cloudUsers = null;
       const $ = (s) => document.querySelector(s),
         $$ = (s) => document.querySelectorAll(s);
       const toCents = (n) => Math.round((Number(n) + Number.EPSILON) * 100);
@@ -1474,6 +1581,283 @@
               "'": "&#39;",
             })[c],
         );
+
+      function apiBase() {
+        return String(settings.apiUrl || "")
+          .trim()
+          .replace(/\/+$/, "");
+      }
+      function setApiBase(value) {
+        const raw = String(value || "").trim();
+        const previous = apiBase();
+        try {
+          if (!raw) settings.apiUrl = "";
+          else {
+            const url = new URL(raw);
+            if (
+              !["https:", "http:"].includes(url.protocol) ||
+              (url.protocol === "http:" &&
+                !["localhost", "127.0.0.1"].includes(url.hostname))
+            )
+              throw new Error();
+            settings.apiUrl = url.origin;
+          }
+          if (previous !== apiBase()) {
+            clearInterval(cloudPolling);
+            clearTimeout(cloudSaveTimer);
+            cloudToken = "";
+            cloudVersion = null;
+            cloudReady = false;
+            cloudDirty = false;
+            sessionStorage.removeItem("darko_api_token");
+            sessionStorage.removeItem("darko_session");
+            currentRole = null;
+            currentUser = null;
+            if (databaseReady) persist(false);
+            const loginApi = $("#loginApiBase");
+            if (loginApi) loginApi.value = apiBase();
+            const loginWrap = $("#loginWrap");
+            if (loginWrap) loginWrap.style.display = "flex";
+          }
+          return true;
+        } catch {
+          toast(
+            "Enter a valid HTTPS API address (HTTP is allowed on localhost)",
+            true,
+          );
+          return false;
+        }
+      }
+      async function apiRequest(path, options = {}, authenticated = true) {
+        if (!apiBase())
+          throw new Error("Shared database API URL is not configured");
+        const headers = {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        };
+        if (authenticated && cloudToken)
+          headers.Authorization = "Bearer " + cloudToken;
+        let response;
+        try {
+          response = await fetch(apiBase() + "/api" + path, {
+            ...options,
+            headers,
+            cache: "no-store",
+          });
+        } catch (error) {
+          error.networkUnavailable = true;
+          throw error;
+        }
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const error = new Error(
+            Array.isArray(body.message)
+              ? body.message.join("; ")
+              : body.message || "Shared database request failed",
+          );
+          error.status = response.status;
+          error.details = body;
+          throw error;
+        }
+        return body;
+      }
+      function workspaceSnapshot() {
+        return { products, sales, parties, ledger, settings };
+      }
+      function applyWorkspaceSnapshot(data) {
+        if (
+          !data ||
+          !Array.isArray(data.products) ||
+          !Array.isArray(data.sales) ||
+          !Array.isArray(data.parties) ||
+          !Array.isArray(data.ledger) ||
+          !data.settings
+        )
+          throw new Error("Shared server returned an invalid inventory backup");
+        cloudHydrating = true;
+        products = data.products;
+        sales = data.sales;
+        parties = data.parties;
+        ledger = data.ledger;
+        settings = { ...settings, ...data.settings, apiUrl: apiBase() };
+        localStorage.setItem(K_PROD, JSON.stringify(products));
+        localStorage.setItem(K_SALES, JSON.stringify(sales));
+        localStorage.setItem(K_PARTY, JSON.stringify(parties));
+        localStorage.setItem(K_LEDGER, JSON.stringify(ledger));
+        localStorage.setItem(K_SET, JSON.stringify(settings));
+        if (databaseReady) writeDatabase();
+        cloudHydrating = false;
+        cloudDirty = false;
+        applyBranding();
+        renderAll();
+      }
+      async function pullSharedWorkspace(showMessage = true) {
+        if (!cloudToken)
+          throw new Error("Sign in to the shared database first");
+        const result = await apiRequest("/workspace");
+        cloudVersion = result.version;
+        if (result.data) applyWorkspaceSnapshot(result.data);
+        cloudReady = Boolean(result.data);
+        updateCloudStatus(
+          result.data
+            ? `Shared database connected · version ${cloudVersion}`
+            : "Shared database is empty · initialize it from an existing backup",
+        );
+        if (showMessage)
+          toast(
+            result.data
+              ? "Latest shared data loaded"
+              : "No shared data has been initialized yet",
+          );
+        return result;
+      }
+      async function refreshCloudUsers() {
+        cloudUsers = await apiRequest("/auth/users");
+        return cloudUsers;
+      }
+      async function pushSharedWorkspace(initial = false) {
+        if (!cloudToken || cloudHydrating) return;
+        if (initial && !isAdmin())
+          throw new Error(
+            "Only the administrator can initialize the shared database",
+          );
+        let result;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            result = await apiRequest("/workspace", {
+              method: "PUT",
+              body: JSON.stringify({
+                expectedVersion: cloudVersion ?? 0,
+                data: workspaceSnapshot(),
+              }),
+            });
+            break;
+          } catch (error) {
+            if (
+              error.status !== 409 ||
+              currentRole !== "cashier" ||
+              attempt === 2
+            )
+              throw error;
+          }
+        }
+        cloudVersion = result.version;
+        cloudReady = true;
+        cloudDirty = false;
+        if (result.merged) {
+          const latest = await apiRequest("/workspace");
+          cloudVersion = latest.version;
+          const receiptNo = lastReceipt && lastReceipt.no;
+          if (latest.data) applyWorkspaceSnapshot(latest.data);
+          if (receiptNo && Array.isArray(result.renumbered)) {
+            const remap = result.renumbered.find(
+              (item) => Number(item.from) === Number(receiptNo),
+            );
+            if (remap) {
+              lastReceipt =
+                sales.find((sale) => Number(sale.no) === Number(remap.to)) ||
+                lastReceipt;
+              if ($("#modalWrap").classList.contains("open"))
+                showReceipt(lastReceipt);
+            }
+          }
+        }
+        updateCloudStatus(
+          `Shared database connected · version ${cloudVersion}`,
+        );
+      }
+      function updateCloudStatus(message) {
+        const badge = $("#databaseStatus");
+        if (badge) badge.textContent = message;
+      }
+      function scheduleCloudSave() {
+        if (!cloudToken || !cloudReady || cloudHydrating) return;
+        cloudDirty = true;
+        clearTimeout(cloudSaveTimer);
+        cloudSaveTimer = setTimeout(async () => {
+          try {
+            await pushSharedWorkspace();
+          } catch (error) {
+            updateCloudStatus(
+              error.status === 409
+                ? "Sync conflict · use Load Shared Data or Push Local Data"
+                : "Shared database unavailable · local changes kept on this device",
+            );
+            if (error.status === 409)
+              toast(
+                "Another device changed the database. Your local data is kept; resolve the sync conflict in Settings.",
+                true,
+              );
+            else if (cloudToken && cloudDirty)
+              cloudSaveTimer = setTimeout(scheduleCloudSave, 10000);
+          }
+        }, 300);
+      }
+      async function pollSharedWorkspace() {
+        if (!cloudToken || !cloudReady || cloudDirty || document.hidden) return;
+        try {
+          const result = await apiRequest("/workspace");
+          if (result.version > cloudVersion) {
+            cloudVersion = result.version;
+            applyWorkspaceSnapshot(result.data);
+            updateCloudStatus(
+              `Shared data refreshed · version ${cloudVersion}`,
+            );
+          }
+        } catch {
+          updateCloudStatus(
+            "Shared database connection interrupted · local data remains available",
+          );
+        }
+      }
+      function startCloudPolling() {
+        clearInterval(cloudPolling);
+        cloudPolling = setInterval(pollSharedWorkspace, 8000);
+      }
+      async function initializeSharedWorkspace() {
+        if (!requireAdmin() || !cloudToken) return;
+        const current = await apiRequest("/workspace");
+        cloudVersion = current.version;
+        if (current.data) {
+          toast(
+            "Shared workspace already has records. Use Push Local Data only to replace it.",
+            true,
+          );
+          return;
+        }
+        if (
+          !confirm(
+            "Upload all products, sales, accounts, settings, and ledger records from this browser to initialize the shared database?",
+          )
+        )
+          return;
+        await pushSharedWorkspace(true);
+        toast("Shared database initialized");
+      }
+      async function pullSharedAction() {
+        try {
+          await pullSharedWorkspace();
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
+      async function forcePushSharedAction() {
+        if (!requireAdmin()) return;
+        try {
+          const current = await apiRequest("/workspace");
+          if (
+            !confirm(
+              `Replace shared database version ${current.version} with this browser's current data?`,
+            )
+          )
+            return;
+          cloudVersion = current.version;
+          await pushSharedWorkspace(true);
+          toast("Local data uploaded to shared database");
+        } catch (error) {
+          toast(error.message, true);
+        }
+      }
 
       function load() {
         let needSave = false;
@@ -1538,6 +1922,7 @@
         localStorage.setItem(K_PARTY, JSON.stringify(parties));
         localStorage.setItem(K_LEDGER, JSON.stringify(ledger));
         if (databaseReady) writeDatabase();
+        scheduleCloudSave();
         if (broadcast && BC) BC.postMessage({ t: "sync" });
       }
       function openDatabase() {
@@ -1582,7 +1967,19 @@
           for (const item of parties) tx.objectStore("parties").put(item);
           for (const item of ledger) tx.objectStore("ledger").put(item);
           tx.objectStore("settings").put({ key: "config", ...settings });
-          for (const item of loadUsers()) tx.objectStore("users").put(item);
+          let accounts = [];
+          if (cloudToken && Array.isArray(cloudUsers))
+            accounts = cloudUsers.map((user) => ({
+              u: user.username,
+              role: user.role,
+              name: user.username,
+            }));
+          else {
+            try {
+              accounts = JSON.parse(localStorage.getItem(K_USERS) || "[]");
+            } catch {}
+          }
+          for (const item of accounts) tx.objectStore("users").put(item);
           tx.onerror = () =>
             console.error("Darko IMS database write failed", tx.error);
         } catch (error) {
@@ -1613,7 +2010,18 @@
             databaseReady = false;
           };
           const data = await readDatabase();
+          let localHadData = false;
           const populated = DB_TABLES.some((table) => data[table]?.length);
+          if (!populated) {
+            const stored = (key) => {
+              try { return JSON.parse(localStorage.getItem(key) || 'null'); }
+              catch { return null; }
+            };
+            localHadData = Boolean(
+              stored(K_PROD)?.length || stored(K_SALES)?.length ||
+                stored(K_PARTY)?.length || stored(K_LEDGER)?.length,
+            );
+          }
           if (populated) {
             // Preserve records from browser storage when an older database
             // contains only a subset of the stores.
@@ -1630,6 +2038,16 @@
             const localLedger = stored(K_LEDGER);
             const localSettings = stored(K_SET);
             const localUsers = stored(K_USERS);
+            localHadData = Boolean(
+              data.products?.length ||
+                data.sales?.length ||
+                data.parties?.length ||
+                data.ledger?.length ||
+                localProducts?.length ||
+                localSales?.length ||
+                localParties?.length ||
+                localLedger?.length,
+            );
             if (!data.products?.length && localProducts?.length)
               data.products = localProducts;
             if (!data.sales?.length && localSales?.length)
@@ -1657,6 +2075,7 @@
           }
           databaseReady = true;
           writeDatabase();
+          localDatabaseHadData = localHadData;
           applyBranding();
           renderAll();
           const badge = document.getElementById("databaseStatus");
@@ -1697,6 +2116,8 @@
           favicon = $("#appFavicon");
         if (touchIcon) touchIcon.href = appIcon;
         if (favicon) favicon.href = appIcon;
+        const apiInput = $("#loginApiBase");
+        if (apiInput) apiInput.value = apiBase();
         const printHeader = $("#globalPrintHeader");
         if (printHeader)
           printHeader.innerHTML = printBrandMarkup(
@@ -2854,13 +3275,14 @@
         }
         const users = loadUsers();
         $("#view-settings").innerHTML =
-          `<h2>Settings &amp; Data</h2><div class="sub">Records are stored in this browser's local IndexedDB database. The app login is a client-side access screen; it does not encrypt local database records.</div><div class="settings-note" id="databaseStatus">${databaseReady ? "IndexedDB connected · local persistent database" : "Connecting to local database…"}</div>
+          `<h2>Settings &amp; Data</h2><div class="sub">Configure the NestJS shared database to sign in and keep the same inventory on every device.</div><div class="settings-note" id="databaseStatus">${cloudReady ? `Shared database connected · version ${cloudVersion}` : databaseReady ? "IndexedDB connected · local offline database" : "Connecting to local database…"}</div>
   <div class="panel"><h3>Preferences</h3><div class="form-grid">
+    <div class="full"><label>NestJS shared API address</label><input id="sApiUrl" type="url" value="${esc(settings.apiUrl || "")}" placeholder="https://your-api.example" style="width:100%"><small>Enter the public server origin. The API endpoints must be available under /api.</small></div>
     <div><label>Currency symbol</label><input id="sCur" value="${esc(settings.currency)}" style="width:100%"></div><div><label>LRD per 1 USD rate</label><input id="sRate" type="number" min="0.0001" step="0.01" value="${Number(settings.lrdRate || 190)}" style="width:100%"></div>
     <div><label>Low-stock threshold (units)</label><input id="sLow" type="number" min="1" value="${settings.lowStock}" style="width:100%"></div>
     <div><label>Expiry warning (days ahead)</label><input id="sExp" type="number" min="1" value="${settings.expiryDays}" style="width:100%"></div><div><label>System name</label><input id="sAppName" value="${esc(settings.appName || "Darko Pharma IMS")}" style="width:100%"></div><div><label>Business name on receipts</label><input id="sBiz" value="${esc(settings.businessName || "DARKO PHARMACEUTICALS & MEDICAL SUPPLIES")}" style="width:100%"></div><div><label>Logo image</label><input id="sLogo" type="file" accept="image/*" style="width:100%"></div><div><label>Background image</label><input id="sBg" type="file" accept="image/*" style="width:100%"><small>${settings.background ? "Custom background active" : "Default medicine background active"}</small> <button class="btn sm ghost" type="button" onclick="resetBackground()">Restore default medicine background</button></div><div><label>Login dashboard logo</label><input id="sLoginLogo" type="file" accept="image/*" style="width:100%"><small>${settings.loginLogo ? "Custom login logo active" : settings.logo ? "Using system logo" : "Default D logo active"}</small></div><div><label>Login dashboard background</label><input id="sLoginBg" type="file" accept="image/*" style="width:100%"><small>${settings.loginBackground ? "Custom login background active" : "Default medicine login image active"}</small> <button class="btn sm ghost" type="button" onclick="resetLoginBranding()">Restore default login design</button></div>
   </div><div style="text-align:right;margin-top:12px"><button class="btn" onclick="saveSettings()"> Save Preferences</button></div></div>
-  <div class="panel"><h3>User Accounts (Admin)</h3><div class="settings-note">Passwords are stored as salted PBKDF2 hashes. Login throttles repeated failures and sessions expire after 30 minutes idle. The database is local to this browser; this app cannot prevent someone with access to this computer or browser developer tools from reading or changing local data.</div>
+  <div class="panel"><h3>User Accounts (Admin)</h3><div class="settings-note">Shared accounts are managed by the NestJS server and use bcrypt password hashes. The server role controls access to shared records on every device.</div>
     <table><thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Actions</th></tr></thead><tbody>
     ${users
       .map(
@@ -2872,9 +3294,10 @@
       )
       .join("")}
     </tbody></table>
-    <div class="toolbar" style="margin-top:12px"><input id="nuUser" placeholder="new username" style="width:150px"><input id="nuPass" placeholder="password" style="width:150px"><select id="nuRole"><option value="cashier">Cashier</option><option value="admin">Administrator</option></select><button class="btn sm" onclick="addUser()"> Add User</button></div>
+    <div class="toolbar" style="margin-top:12px"><input id="nuUser" placeholder="new username" style="width:150px"><input id="nuPass" placeholder="password (14+ characters)" style="width:210px"><select id="nuRole"><option value="cashier">Cashier</option><option value="admin">Administrator</option></select><button class="btn sm" onclick="addUser()"> Add User</button></div>
   </div>
   <div class="panel"><h3>Data Tools</h3>
+    <div class="toolbar">${cloudToken ? `${!cloudReady && isAdmin() ? '<button class="btn" onclick="initializeSharedWorkspace()">Initialize Shared Database from This Browser</button>' : ""}<button class="btn ghost" onclick="pullSharedAction()">Load Latest Shared Data</button>${isAdmin() ? '<button class="btn ghost" onclick="forcePushSharedAction()">Push Local Data to Shared Database</button>' : ""}` : '<span class="settings-note">Sign in with the shared API URL to synchronize devices.</span>'}</div>
     <div class="toolbar">
       <button class="btn ghost" onclick="exportCSV()">Export Inventory CSV</button><button class="btn ghost" onclick="document.getElementById('bulkFile').click()">Bulk Upload CSV</button><input id="bulkFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importInventoryCSV(this)"><button class="btn ghost" onclick="printInventoryA4()">Print Inventory A4</button>
       <button class="btn ghost" onclick="exportSalesCSV()"> Export Sales CSV</button>
@@ -2883,7 +3306,7 @@
       <button class="btn warn" onclick="resetData()"> Reset to PDF seed data</button>
     </div>
     <div class="settings-note">
-      <b>Storage and hosting:</b> this installable app works on static hosts such as Vercel and remains available offline on this device. Each browser profile has its own database. Shared, live records across devices require a hosted database and secure API/backend; a static HTML file cannot create that service or safely store private credentials. Use Full Backup / Extract and Restore Full Backup to move all records between installations. Install over HTTPS in a supported browser; add the POS printer in the operating system, then select its driver and paper size in the browser print dialog. POS receipts use 80 mm paper by default; A4 uses standard A4 layout.
+      <b>Shared records:</b> configure the NestJS API address above on each new device, then sign in with a server account. Existing data is stored in PostgreSQL and refreshes across browsers. Offline edits stay on this device until synced; version conflicts require loading shared data or an administrator choosing which snapshot to push. Local backup and restore remains available.
     </div>
   </div>`;
       }
@@ -2892,6 +3315,27 @@
         const u = $("#nuUser").value.trim(),
           p = $("#nuPass").value,
           role = $("#nuRole").value;
+        if (cloudToken) {
+          if (!/^[A-Za-z0-9._-]{3,40}$/.test(u) || p.length < 14) {
+            toast(
+              "Use a 3–40 character username and a password of at least 14 characters",
+              true,
+            );
+            return;
+          }
+          try {
+            await apiRequest("/auth/users", {
+              method: "POST",
+              body: JSON.stringify({ username: u, password: p, role }),
+            });
+            await refreshCloudUsers();
+            renderSettings();
+            toast("Shared account added");
+          } catch (error) {
+            toast(error.message, true);
+          }
+          return;
+        }
         if (!u || p.length < 12) {
           toast(
             "Username and a password of at least 12 characters required",
@@ -2918,6 +3362,23 @@
         if (!requireAdmin()) return;
         const users = loadUsers();
         const np = prompt("New password for " + users[i].u + ":");
+        if (cloudToken) {
+          if (!np || np.length < 14) {
+            if (np !== null)
+              toast("Password must be at least 14 characters", true);
+            return;
+          }
+          try {
+            await apiRequest(
+              "/auth/users/" + encodeURIComponent(users[i].u) + "/password",
+              { method: "PATCH", body: JSON.stringify({ password: np }) },
+            );
+            toast("Shared account password updated");
+          } catch (error) {
+            toast(error.message, true);
+          }
+          return;
+        }
         if (!np || np.length < 12) {
           if (np !== null)
             toast("Password must be at least 12 characters", true);
@@ -2940,6 +3401,19 @@
             "Use 3–32 letters, numbers, dots, underscores or hyphens",
             true,
           );
+          return;
+        }
+        if (cloudToken) {
+          apiRequest("/auth/users/" + encodeURIComponent(account.u), {
+            method: "PATCH",
+            body: JSON.stringify({ username }),
+          })
+            .then(async () => {
+              await refreshCloudUsers();
+              renderSettings();
+              toast("Shared username updated");
+            })
+            .catch((error) => toast(error.message, true));
           return;
         }
         if (
@@ -2983,7 +3457,7 @@
         renderSettings();
         toast("Default login design restored");
       }
-      function delUser(i) {
+      async function delUser(i) {
         if (!requireAdmin()) return;
         const users = loadUsers();
         if (
@@ -2998,6 +3472,20 @@
           return;
         }
         if (confirm("Delete user " + users[i].u + "?")) {
+          if (cloudToken) {
+            try {
+              await apiRequest(
+                "/auth/users/" + encodeURIComponent(users[i].u),
+                { method: "DELETE" },
+              );
+              await refreshCloudUsers();
+              renderSettings();
+              toast("Shared account deleted");
+            } catch (error) {
+              toast(error.message, true);
+            }
+            return;
+          }
           users.splice(i, 1);
           saveUsers(users);
           renderSettings();
@@ -3005,6 +3493,7 @@
         }
       }
       function saveSettings() {
+        if (!setApiBase($("#sApiUrl").value)) return;
         settings.currency = $("#sCur").value.trim() || "USD";
         const rate = Number($("#sRate").value);
         if (!Number.isFinite(rate) || rate <= 0) {
@@ -3068,12 +3557,11 @@
         dl(
           JSON.stringify(
             {
-              schemaVersion: 1,
+              schemaVersion: 2,
               products,
               sales,
               parties,
               ledger,
-              users: loadUsers(),
               settings,
               exported: new Date().toISOString(),
             },
@@ -3100,7 +3588,7 @@
         reader.onload = () => {
           try {
             const data = JSON.parse(String(reader.result));
-            const arrays = ["products", "sales", "parties", "ledger", "users"];
+            const arrays = ["products", "sales", "parties", "ledger"];
             if (
               !data ||
               !arrays.every((key) => Array.isArray(data[key])) ||
@@ -3108,6 +3596,8 @@
               typeof data.settings !== "object"
             )
               throw new Error("This file is not a complete Darko IMS backup.");
+            if (data.users !== undefined && !Array.isArray(data.users))
+              throw new Error("Backup user list is invalid.");
             if (
               data.products.some(
                 (p) =>
@@ -3132,17 +3622,22 @@
               throw new Error(
                 "Backup contains invalid sales records; current data was not changed.",
               );
-            if (!data.users.some((u) => u && u.role === "admin" && u.p))
+            if (
+              data.users?.length &&
+              !data.users.some((u) => u && u.role === "admin" && u.p)
+            )
               throw new Error(
-                "Backup must contain at least one administrator account.",
+                "Legacy backup user list does not contain an administrator account.",
               );
             if (
+              data.users?.length &&
+              !cloudToken &&
               !data.users.some(
-                (u) => u && u.u === currentUser && u.role === "admin",
+                (u) => u?.u === currentUser && u.role === "admin",
               )
             )
               throw new Error(
-                "Backup must include the administrator account currently signed in, to prevent locking this installation.",
+                "This backup does not include the signed-in administrator account.",
               );
             if (
               !confirm(
@@ -3155,7 +3650,7 @@
             parties = data.parties;
             ledger = data.ledger;
             settings = { ...settings, ...data.settings };
-            saveUsers(data.users);
+            if (data.users?.length && !cloudToken) saveUsers(data.users);
             cart = [];
             persist();
             applyBranding();
@@ -3594,21 +4089,29 @@
       (function () {
         try {
           const s = JSON.parse(sessionStorage.getItem("darko_session"));
-          const account = s && loadUsers().find((x) => x.u === s.u);
-          if (account) {
-            currentRole = account.role;
-            currentUser = account.u;
-            if (
-              Date.now() -
-                Number(sessionStorage.getItem("darko_last_activity") || 0) >
-              SESSION_TIMEOUT_MS
-            ) {
-              logout();
-              return;
-            }
+          if (s?.remote && cloudToken && s.u) {
+            currentRole = s.role;
+            currentUser = s.u;
+            restoreCloudSession = true;
             $("#loginWrap").style.display = "none";
             applyRole();
-          } else sessionStorage.removeItem("darko_session");
+          } else {
+            const account = s && loadUsers().find((x) => x.u === s.u);
+            if (account) {
+              currentRole = account.role;
+              currentUser = account.u;
+              if (
+                Date.now() -
+                  Number(sessionStorage.getItem("darko_last_activity") || 0) >
+                SESSION_TIMEOUT_MS
+              ) {
+                logout();
+                return;
+              }
+              $("#loginWrap").style.display = "none";
+              applyRole();
+            } else sessionStorage.removeItem("darko_session");
+          }
         } catch (e) {}
         if (!currentRole) $("#loginWrap").style.display = "flex";
         restoreSidebarPreference();
@@ -3626,7 +4129,38 @@
           renderAll();
         }
       })();
-      initializeDatabase();
+      initializeDatabase().then(async () => {
+        if (!restoreCloudSession || !cloudToken) return;
+        try {
+          const profile = await apiRequest("/auth/profile");
+          currentUser = profile.username;
+          currentRole = profile.role;
+          sessionStorage.setItem(
+            "darko_session",
+            JSON.stringify({ u: currentUser, role: currentRole, remote: true }),
+          );
+          await pullSharedWorkspace(false);
+          if (isAdmin()) await refreshCloudUsers();
+          startCloudPolling();
+          applyRole();
+          renderAll();
+        } catch (error) {
+          console.warn("Could not restore shared database session", error);
+          if (error.status === 401 || error.status === 403) logout();
+          else {
+            cloudToken = "";
+            sessionStorage.removeItem("darko_api_token");
+            sessionStorage.removeItem("darko_session");
+            currentRole = null;
+            currentUser = null;
+            cloudReady = false;
+            updateCloudStatus(
+              "Shared server unavailable · local offline data remains available",
+            );
+            $("#loginWrap").style.display = "flex";
+          }
+        }
+      });
     </script>
     <script
       type="module"
